@@ -1,6 +1,8 @@
-# Maze
+# Jungle Vines
 
 ...
+
+![Preview](public/img/preview.webp)
 
 ## Getting Started
 

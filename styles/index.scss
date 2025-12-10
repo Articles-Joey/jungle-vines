@@ -3,3 +3,13 @@
 
 @use "./pages/landing" as *;
 @use "./pages/game" as *;
+
+i {
+    margin-right: 0.2rem;
+}
+
+button,
+.btn {
+    white-space: pre;
+    font-size: 0.7rem !important;
+}

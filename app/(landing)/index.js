@@ -182,9 +182,12 @@ export default function LobbyPage() {
 
                     <div className="card-body">
 
-                        <Link href={{
-                            pathname: `/play`
-                        }}>
+                        <Link
+                            prefetch={false}
+                            href={{
+                                pathname: `/play`
+                            }}
+                        >
                             <ArticlesButton
                                 className={`w-100 mb-3`}
                                 small
@@ -240,6 +243,7 @@ export default function LobbyPage() {
 
                                         <Link
                                             className={``}
+                                            prefetch={false}
                                             href={{
                                                 pathname: `/play`,
                                                 query: {
@@ -289,7 +293,7 @@ export default function LobbyPage() {
                             Rules & Controls
                         </ArticlesButton>
 
-                        <Link href={'/'} className='w-50'>
+                        {/* <Link href={'/'} className='w-50'>
                             <ArticlesButton
                                 className={`w-100`}
                                 small
@@ -299,6 +303,25 @@ export default function LobbyPage() {
                             >
                                 <i className="fad fa-sign-out fa-rotate-180"></i>
                                 Leave Game
+                            </ArticlesButton>
+                        </Link> */}
+
+                        <Link
+                            href={'https://github.com/Articles-Joey/jungle-vines'}
+                            className='w-50'
+                            target='_blank'
+                            rel="noopener noreferrer"
+                            prefetch={false}
+                        >
+                            <ArticlesButton
+                                className={`w-100`}
+                                small
+                                onClick={() => {
+
+                                }}
+                            >
+                                <i className="fab fa-github"></i>
+                                Github
                             </ArticlesButton>
                         </Link>
 
