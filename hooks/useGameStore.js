@@ -17,12 +17,19 @@ export const useGameStore = create((set) => ({
         }))
     },
 
-    maxHeight: 0,
-    setMaxHeight: (newValue) => {
+    playerDisabled: false,
+    setPlayerDisabled: (newValue) => {
         set((prev) => ({
-            maxHeight: newValue
+            playerDisabled: newValue
         }))
     },
+
+    // maxHeight: 0,
+    // setMaxHeight: (newValue) => {
+    //     set((prev) => ({
+    //         maxHeight: newValue
+    //     }))
+    // },
 
     shift: false,
     setShift: (newValue) => {
@@ -46,6 +53,20 @@ export const useGameStore = create((set) => ({
     setTeleport: (newValue) => {
         set((prev) => ({
             teleport: newValue
+        }))
+    },
+
+    attachedRope: null,
+    setAttachedRope: (newValue) => {
+        set((prev) => ({
+            attachedRope: newValue
+        }))
+    },
+
+    lastRopeDetachTime: 0,
+    setLastRopeDetachTime: (newValue) => {
+        set((prev) => ({
+            lastRopeDetachTime: newValue
         }))
     },
 

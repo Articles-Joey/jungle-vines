@@ -15,6 +15,8 @@ import { useLocalStorageNew } from '@/hooks/useLocalStorageNew';
 // import IsDev from '@/components/IsDev';
 // import { ChromePicker } from 'react-color';
 import { useSocketStore } from '@/hooks/useSocketStore';
+import { useStore } from '@/hooks/useStore';
+import ScoreCard from '@/components/UI/ScoreCard';
 
 // import GameScoreboard from 'components/Games/GameScoreboard'
 
@@ -53,7 +55,54 @@ export default function LobbyPage() {
     // const userReduxState = useSelector((state) => state.auth.user_details)
     const userReduxState = false
 
-    const [nickname, setNickname] = useLocalStorageNew("game:nickname", userReduxState.display_name)
+    // const [nickname, setNickname] = useLocalStorageNew("game:nickname", userReduxState.display_name)
+    const nickname = useStore((state) => state.nickname);
+    const setNickname = useStore((state) => state.setNickname);
+    const _hasHydrated = useStore((state) => state._hasHydrated);
+    const maxDistanceTraveled = useStore((state) => state.maxDistanceTraveled);
+
+    const setRandomNickname = () => {
+        const randomNicknames = [
+            "JungleJumper",
+            "VineSwinger",
+            "TarzanTitan",
+            "MonkeyMaster",
+            "BananaBoss",
+            "CanopyKing",
+            "TreeTopTrekker",
+            "WildWalker",
+            "ForestPhantom",
+            "RopeRanger",
+            "LeafLeaper",
+            "PrimatePro",
+            "SafariScout",
+            "GorillaGlider",
+            "ChimpChamp",
+            "AmazonAce",
+            "RainforestRacer",
+            "BranchBounder",
+            "TropicalTraveler",
+            "SavageSwinger"
+        ];
+
+        const randomIndex = Math.floor(Math.random() * randomNicknames.length);
+        setNickname(randomNicknames[randomIndex]);
+    }
+
+    // Only do once so user can set name from nothing without retriggering
+    const [initialRandomName, setInitialRandomName] = useState(false)
+    useEffect(() => {
+
+        // console.log("nickname", nickname)
+        // console.log("rehydrated", _hasHydrated)
+
+        if (!nickname && _hasHydrated && !initialRandomName) {
+            console.log("No nickname set, set a random!")
+            setRandomNickname()
+            setInitialRandomName(true)
+        }
+
+    }, [nickname, _hasHydrated])
 
     const [showInfoModal, setShowInfoModal] = useState(false)
     const [showSettingsModal, setShowSettingsModal] = useState(false)
@@ -138,7 +187,16 @@ export default function LobbyPage() {
                 />
             </div>
 
-            <div className="container d-flex flex-column-reverse flex-lg-row justify-content-center align-items-center">
+            <div className="container d-flex flex-column justify-content-center align-items-center">
+
+                {maxDistanceTraveled &&
+                    <div
+                        style={{ "width": "20rem" }}
+                        className='mb-3'
+                    >
+                        <ScoreCard />
+                    </div>
+                }
 
                 <div
                     className="card card-articles card-sm mb-3 mb-lg-0"
@@ -161,18 +219,27 @@ export default function LobbyPage() {
                             <div className="form-group articles mb-0">
                                 <label htmlFor="nickname">Nickname</label>
                                 {/* <SingleInput
-                                    value={nickname}
-                                    setValue={setNickname}
-                                    noMargin
-                                /> */}
-                                <input
-                                    type="text"
-                                    id="nickname"
-                                    value={nickname}
-                                    onChange={(e) => setNickname(e.target.value)}
-                                    className="form-control"
-                                    placeholder="Enter your nickname"
-                                />
+                                        value={nickname}
+                                        setValue={setNickname}
+                                        noMargin
+                                    /> */}
+                                <div className='d-flex'>
+                                    <input
+                                        type="text"
+                                        id="nickname"
+                                        value={nickname}
+                                        onChange={(e) => setNickname(e.target.value)}
+                                        className="form-control"
+                                        placeholder="Enter your nickname"
+                                    />
+                                    <ArticlesButton
+                                        className=''
+                                        small
+                                        onClick={setRandomNickname}
+                                    >
+                                        <i className="fad fa-redo"></i>
+                                    </ArticlesButton>
+                                </div>
                             </div>
 
                             <div className='mt-1' style={{ fontSize: '0.8rem' }}>Visible to all players</div>
@@ -187,82 +254,94 @@ export default function LobbyPage() {
                             href={{
                                 pathname: `/play`
                             }}
+                            className=''
                         >
                             <ArticlesButton
-                                className={`w-100 mb-3`}
-                                small
+                                className={`w-100 mb-2`}
+                            // small
                             >
-                                <i className="fas fa-play"></i>
+                                <i className="fas fa-play me-2"></i>
                                 Play Single Player
                             </ArticlesButton>
                         </Link>
 
-                        <div className="fw-bold mb-1 small text-center">
-                            {lobbyDetails.players.length || 0} player{lobbyDetails.players.length > 1 && 's'} in the lobby.
-                        </div>
+                        <ArticlesButton
+                            className={`w-100`}
+                            // small
+                            disabled
+                        >
+                            <i className="fas fa-users me-2"></i>
+                            Multiplayer Coming Soon!
+                        </ArticlesButton>
 
-                        <div className="servers">
+                        <div className='d-none mt-3'>
+                            <div className="fw-bold mb-1 small text-center">
+                                {lobbyDetails.players.length || 0} player{lobbyDetails.players.length > 1 && 's'} in the lobby.
+                            </div>
 
-                            {[1, 2, 3, 4].map(id => {
+                            <div className="servers">
 
-                                let lobbyLookup = lobbyDetails?.fourFrogsGlobalState?.games?.find(lobby =>
-                                    parseInt(lobby.server_id) == id
-                                )
+                                {[1, 2, 3, 4].map(id => {
 
-                                return (
-                                    <div key={id} className="server">
+                                    let lobbyLookup = lobbyDetails?.fourFrogsGlobalState?.games?.find(lobby =>
+                                        parseInt(lobby.server_id) == id
+                                    )
 
-                                        <div className='d-flex justify-content-between align-items-center w-100 mb-2'>
-                                            <div className="mb-0" style={{ fontSize: '0.9rem' }}><b>Server {id}</b></div>
-                                            <div className='mb-0'>{lobbyLookup?.players?.length || 0}/4</div>
-                                        </div>
+                                    return (
+                                        <div key={id} className="server">
 
-                                        <div className='d-flex justify-content-around w-100 mb-1'>
-                                            {[1, 2, 3, 4].map(player_count => {
+                                            <div className='d-flex justify-content-between align-items-center w-100 mb-2'>
+                                                <div className="mb-0" style={{ fontSize: '0.9rem' }}><b>Server {id}</b></div>
+                                                <div className='mb-0'>{lobbyLookup?.players?.length || 0}/4</div>
+                                            </div>
 
-                                                let playerLookup = false
+                                            <div className='d-flex justify-content-around w-100 mb-1'>
+                                                {[1, 2, 3, 4].map(player_count => {
 
-                                                if (lobbyLookup?.players?.length >= player_count) playerLookup = true
+                                                    let playerLookup = false
 
-                                                return (
-                                                    <div key={player_count} className="icon" style={{
-                                                        width: '20px',
-                                                        height: '20px',
-                                                        ...(playerLookup ? {
-                                                            backgroundColor: 'black',
-                                                        } : {
-                                                            backgroundColor: 'gray',
-                                                        }),
-                                                        border: '1px solid black'
-                                                    }}>
+                                                    if (lobbyLookup?.players?.length >= player_count) playerLookup = true
 
-                                                    </div>
-                                                )
-                                            })}
-                                        </div>
+                                                    return (
+                                                        <div key={player_count} className="icon" style={{
+                                                            width: '20px',
+                                                            height: '20px',
+                                                            ...(playerLookup ? {
+                                                                backgroundColor: 'black',
+                                                            } : {
+                                                                backgroundColor: 'gray',
+                                                            }),
+                                                            border: '1px solid black'
+                                                        }}>
 
-                                        <Link
-                                            className={``}
-                                            prefetch={false}
-                                            href={{
-                                                pathname: `/play`,
-                                                query: {
-                                                    server: id
-                                                }
-                                            }}
-                                        >
-                                            <ArticlesButton
-                                                className="px-5"
-                                                small
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+
+                                            <Link
+                                                className={``}
+                                                prefetch={false}
+                                                href={{
+                                                    pathname: `/play`,
+                                                    query: {
+                                                        server: id
+                                                    }
+                                                }}
                                             >
-                                                Join
-                                            </ArticlesButton>
-                                        </Link>
+                                                <ArticlesButton
+                                                    className="px-5"
+                                                    small
+                                                >
+                                                    Join
+                                                </ArticlesButton>
+                                            </Link>
 
-                                    </div>
-                                )
-                            })}
+                                        </div>
+                                    )
+                                })}
 
+                            </div>
                         </div>
 
                     </div>

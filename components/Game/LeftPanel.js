@@ -7,6 +7,8 @@ import ArticlesButton from "@/components/UI/Button";
 // import ControllerPreview from "../../ControllerPreview";
 
 import { useSocketStore } from "@/hooks/useSocketStore";
+import { useStore } from "@/hooks/useStore";
+import ScoreCard from "../UI/ScoreCard";
 // import { useIceSlideStore } from "./hooks/useIceSlideStore";
 // import { useEffect, useRef } from "react";
 // import { useHotkeys } from "react-hotkeys-hook";
@@ -44,6 +46,9 @@ export default function LeftPanelContent(props) {
         socket: state.socket,
     }));
 
+    const darkMode = useStore((state) => state.darkMode);
+    const toggleDarkMode = useStore((state) => state.toggleDarkMode);
+
     return (
         <div className='w-100'>
 
@@ -70,6 +75,8 @@ export default function LeftPanelContent(props) {
                                         console.log("Reconnect")
                                         socket.connect()
                                     }}
+                                    className="w-100 mb-3"
+                                    size="sm"
                                 >
                                     Reconnect!
                                 </ArticlesButton>
@@ -109,6 +116,18 @@ export default function LeftPanelContent(props) {
                         <span>Fullscreen</span>
                     </ArticlesButton>
 
+                    <ArticlesButton
+                        className='w-50'
+                        small
+                        active={darkMode}
+                        onClick={() => {
+                            toggleDarkMode()
+                        }}
+                    >
+                        <i className="fad fa-sun"></i>
+                        <span>Dark Mode</span>
+                    </ArticlesButton>
+
                 </div>
             </div>
 
@@ -143,6 +162,9 @@ export default function LeftPanelContent(props) {
 
                 </div>
             </div> */}
+
+            {/* Score */}
+            <ScoreCard />
 
             {/* Touch Controls */}
             <div

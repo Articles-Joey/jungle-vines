@@ -4,7 +4,7 @@ import { Modal, Form } from "react-bootstrap"
 
 import ArticlesButton from "@/components/UI/Button";
 
-export default function FourFrogsSettingsModal({
+export default function SettingsModal({
     show,
     setShow,
 }) {
@@ -73,14 +73,6 @@ export default function FourFrogsSettingsModal({
                             <div>
                                 {[
                                     {
-                                        action: 'Move Up',
-                                        defaultKeyboardKey: 'W'
-                                    },
-                                    {
-                                        action: 'Move Down',
-                                        defaultKeyboardKey: 'S'
-                                    },
-                                    {
                                         action: 'Move Left',
                                         defaultKeyboardKey: 'A'
                                     },
@@ -88,41 +80,30 @@ export default function FourFrogsSettingsModal({
                                         action: 'Move Right',
                                         defaultKeyboardKey: 'D'
                                     },
+                                                                        {
+                                        action: 'Move Up on Vine',
+                                        defaultKeyboardKey: 'W'
+                                    },
                                     {
-                                        action: 'Drop Insect',
+                                        action: 'Move Down on Vine',
+                                        defaultKeyboardKey: 'S'
+                                    },
+                                    {
+                                        action: 'Jump',
                                         defaultKeyboardKey: 'Space'
                                     },
-                                    {
-                                        action: 'Stop Powerup',
-                                        defaultKeyboardKey: 'ArrowDown'
-                                    },
-                                    {
-                                        emote: true,
-                                        action: 'Stick out Tongue',
-                                        defaultKeyboardKey: 'ArrowDown'
-                                    },
-                                    {
-                                        emote: true,
-                                        action: 'Rotate Left',
-                                        defaultKeyboardKey: 'ArrowLeft'
-                                    },
-                                    {
-                                        emote: true,
-                                        action: 'Rotate Right',
-                                        defaultKeyboardKey: 'ArrowRight'
-                                    }
                                 ].map(obj =>
                                     <div key={obj.action}>
                                         <div className="flex-header border-bottom pb-1 mb-1">
 
                                             <div>
                                                 <div>{obj.action}</div>
-                                                {obj.emote && <div className="span badge bg-dark">Emote</div>}
+                                                {obj.emote && <div className="span badge bg-dark border">Emote</div>}
                                             </div>
 
                                             <div>
 
-                                                <div className="badge badge-hover bg-articles me-1">{obj.defaultKeyboardKey}</div>
+                                                <div className="badge badge-hover border bg-articles me-1">{obj.defaultKeyboardKey}</div>
 
                                                 <ArticlesButton 
                                                     className=""

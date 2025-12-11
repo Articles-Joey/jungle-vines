@@ -13,6 +13,8 @@ import Player from "./Player";
 import WaterPlane from "./WaterPlane";
 import { ModelQuaterniusFishingPiranha } from "@/components/Models/Piranha";
 import { ModelQuaterniusFishingShark } from "@/components/Models/Shark";
+import FlyingEnemy from "./FlyingEnemy";
+import RopeSwing from "./RopeSwing";
 
 const texture = new TextureLoader().load(`${process.env.NEXT_PUBLIC_CDN}games/Race Game/grass.jpg`)
 
@@ -146,7 +148,7 @@ function GameCanvas(props) {
                     <RopeSwing
                         position={[
                             10,
-                            15,
+                            10,
                             0
                         ]}
                         args={[0.1, 0.1, 15, 8]}
@@ -155,7 +157,16 @@ function GameCanvas(props) {
                     <RopeSwing
                         position={[
                             20,
-                            15,
+                            10,
+                            0
+                        ]}
+                        args={[0.1, 0.1, 15, 8]}
+                    />
+
+                    <RopeSwing
+                        position={[
+                            30,
+                            10,
                             0
                         ]}
                         args={[0.1, 0.1, 15, 8]}
@@ -200,110 +211,6 @@ function Platform({ args, position, color }) {
         <mesh ref={ref} castShadow>
             <boxGeometry args={args} />
             <meshStandardMaterial color={color} />
-        </mesh>
-    )
-
-}
-
-function RopeSwing({ args, position, rotation }) {
-
-    const groupRef = useRef();
-    const swingSpeed = 2; // Adjust the speed of the swing
-    const swingAmplitude = Math.PI / 6; // Adjust the angle range (e.g., 30 degrees)
-
-    const enemeyRef = useRef();
-    const climbSpeed = 1; // Speed of the enemy's climb
-    const climbRange = args[2] / 2;
-
-    const [ref, api] = useCylinder(() => ({
-        mass: 0,
-        type: 'Dynamic',
-        args: args,
-        position: position,
-        onCollide: () => {
-            console.log("Player collided with the rope swing, stick player to swing!")
-        }
-    }))
-
-    useFrame(({ clock }) => {
-
-        const time = clock.getElapsedTime();
-
-        if (groupRef.current) {
-            // const time = clock.getElapsedTime();
-            // Update rotation on the X-axis to create a back-and-forth motion
-            groupRef.current.rotation.z = Math.sin(time * swingSpeed) * swingAmplitude;
-        }
-
-        // Enemy climbing movement
-        if (enemeyRef.current) {
-            const climbPosition = Math.sin(time * climbSpeed) * climbRange; // Oscillates between -climbRange and climbRange
-            enemeyRef.current.position.set(0, climbPosition, 0); // Move along Y-axis in groupRef's local space
-        }
-
-    });
-
-    return (
-        <group rotation={rotation}>
-
-            <mesh ref={ref} castShadow>
-                <boxGeometry args={[1, 1, 1]} />
-                <meshStandardMaterial color="saddlebrown" />
-            </mesh>
-
-            <group ref={groupRef} position={position}>
-
-                <mesh position={[0, -args[2] / 2, 0]} castShadow>
-                    <cylinderGeometry args={args} />
-                    <meshStandardMaterial color="green" />
-                </mesh>
-
-                <mesh ref={enemeyRef} castShadow>
-                    <sphereGeometry args={[1, 10, 10]} />
-                    <meshStandardMaterial color="red" />
-                </mesh>
-
-            </group>
-
-        </group>
-    )
-
-}
-
-function FlyingEnemy({  args = [1, 1, 1], position = [0, 4, 0] }) {
-
-    const [ref, api] = useBox(() => ({
-        mass: 0,
-        type: 'Dynamic',
-        args: args,
-        position: position,
-        onCollide: () => {
-            console.log("Player collided with a flying enemy!")
-        }
-    }))
-
-    useFrame(({ clock }) => {
-        const time = clock.getElapsedTime();
-        const cycleDuration = 5; // Time it takes to move from x=50 to x=0 and reset
-        const progress = time % cycleDuration; // Get progress within the current cycle
-
-        let xPosition;
-        if (progress < cycleDuration) {
-            // Animate x from 50 to 0
-            xPosition = 50 - (progress / cycleDuration) * 50;
-        } else {
-            // Instant jump back to x = 50
-            xPosition = 50;
-        }
-
-        // Update position via the physics API
-        api.position.set(xPosition, position[1], position[2]);
-    });
-
-    return (
-        <mesh ref={ref} castShadow>
-            <boxGeometry args={[1, 1, 1]} />
-            <meshStandardMaterial color="red" />
         </mesh>
     )
 

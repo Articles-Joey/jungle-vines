@@ -9,6 +9,7 @@ import { Model as ModelKingMen } from "@/components/Models/King";
 
 import { useControllerStore } from '@/hooks/useControllerStore';
 import { useControlsStore, useGameStore } from "@/hooks/useGameStore";
+import { useStore } from "@/hooks/useStore";
 import { degToRad } from "three/src/math/MathUtils";
 
 const JUMP_FORCE = 6;
@@ -32,15 +33,36 @@ function PlayerBase(props) {
         cameraMode, setCameraMode,
         teleport, setTeleport,
         setPlayerLocation,
-        maxHeight, setMaxHeight,
+        // maxHeight, setMaxHeight,
         shift, setShift,
+        attachedRope, setAttachedRope,
+        setLastRopeDetachTime,
+        playerDisabled,
     } = useGameStore()
 
     const {
         touchControls, setTouchControls
     } = useControlsStore()
 
+    // const { maxDistanceTraveled, setMaxDistanceTraveled } = useStore()
+    const maxDistanceTraveled = useStore((state) => state.maxDistanceTraveled)
+    const setMaxDistanceTraveled = useStore((state) => state.setMaxDistanceTraveled)
+    const setPlayerDisabled = useGameStore((state) => state.setPlayerDisabled)
+
     const { controllerState, setControllerState } = useControllerStore()
+
+    const ropeHeight = useRef(0)
+
+    useEffect(() => {
+        if (attachedRope) {
+            const pivotY = attachedRope.position[1]
+            const playerY = pos.current[1]
+            let h = pivotY - playerY
+            h = Math.max(1, Math.min(h, attachedRope.length))
+            ropeHeight.current = h
+            api.velocity.set(0, 0, 0)
+        }
+    }, [attachedRope])
 
     // Attach event listeners when the component mounts
     useEffect(() => {
@@ -57,17 +79,19 @@ function PlayerBase(props) {
 
     }, [controllerState]);
 
-    // useEffect(() => {
+    useEffect(() => {
 
-    //     if (teleport) {
+        if (teleport) {
 
-    //         console.log("Teleport has been called!", teleport)
-    //         api.position.set(teleport[0], teleport[1], teleport[2]);
-    //         setTeleport(false)
+            console.log("Teleport has been called!", teleport)
+            setAttachedRope(null)
+            api.position.set(teleport[0], teleport[1], teleport[2]);
+            api.velocity.set(0, 0, 0);
+            setTeleport(false)
 
-    //     }
+        }
 
-    // }, [teleport]);
+    }, [teleport]);
 
     const { moveBackward, moveForward, moveRight, moveLeft, jump, shift: isShifting, crouch } = useKeyboard()
 
@@ -86,7 +110,8 @@ function PlayerBase(props) {
     const [ref, api] = useSphere(() => ({
         mass: 1,
         args: [0.5],
-        position: [0, 2, 0]
+        position: [0, 2, 0],
+        userData: { tag: 'player' }
     }))
 
     const material = new THREE.MeshPhysicalMaterial({
@@ -112,6 +137,8 @@ function PlayerBase(props) {
                     0, 10, 0
                 );
 
+                setPlayerDisabled(false)
+
                 camera.lookAt(0, 0, -50);
                 api.velocity.set(0, 0, 0);
             }
@@ -129,7 +156,60 @@ function PlayerBase(props) {
     //     setShift(isShifting)
     // }, [isShifting])
 
-    useFrame(() => {
+    useFrame(({ clock }) => {
+
+        if (playerDisabled) {
+            if (cameraMode == "Player") {
+                camera.position.copy(new Vector3(pos.current[0], pos.current[1] + 8, 50))
+                camera.lookAt(new Vector3(pos.current[0], pos.current[1], 0))
+            }
+            return
+        }
+
+        if (attachedRope) {
+            if (moveForward) ropeHeight.current -= 0.1
+            if (moveBackward) ropeHeight.current += 0.1
+            ropeHeight.current = Math.max(1, Math.min(ropeHeight.current, attachedRope.length))
+
+            const time = clock.getElapsedTime();
+            const angle = Math.sin(time * attachedRope.swingSpeed) * attachedRope.swingAmplitude;
+            
+            const pivot = new Vector3(...attachedRope.position)
+            const offset = new Vector3(0, -ropeHeight.current, 0)
+            offset.applyAxisAngle(new Vector3(0, 0, 1), angle)
+            
+            const newPos = pivot.clone().add(offset)
+            
+            api.position.set(newPos.x, newPos.y, newPos.z)
+            api.velocity.set(0, 0, 0)
+
+            if (cameraMode == "Player") {
+                camera.position.copy(new Vector3(newPos.x, newPos.y + 8, 50))
+                camera.lookAt(new Vector3(newPos.x, newPos.y, 0))
+            }
+
+            if ((jump || touchControls.jump)) {
+                console.log("Jump off rope")
+                setAttachedRope(null)
+                setLastRopeDetachTime(Date.now())
+
+                const w = attachedRope.swingSpeed;
+                const A = attachedRope.swingAmplitude;
+                const L = ropeHeight.current;
+                
+                const thetaDot = A * w * Math.cos(time * w);
+                
+                const vx = L * Math.cos(angle) * thetaDot;
+                const vy = L * Math.sin(angle) * thetaDot;
+
+                api.velocity.set(vx, vy + JUMP_FORCE, 0)
+
+                if (touchControls.jump) {
+                    setTouchControls({ ...touchControls, jump: false })
+                }
+            }
+            return
+        }
 
         if (cameraMode == "Player") {
             camera.position.copy(new Vector3(pos.current[0], pos.current[1] + 8, 50))
@@ -165,8 +245,12 @@ function PlayerBase(props) {
         //     console.log("location unchanged")
         // }
 
-        if (pos.current[1] > maxHeight) {
-            setMaxHeight(pos.current[1].toFixed(2))
+        // if (pos.current[1] > maxHeight) {
+        //     setMaxHeight(pos.current[1].toFixed(2))
+        // }
+
+        if (pos.current[0] > maxDistanceTraveled) {
+            setMaxDistanceTraveled(pos.current[0])
         }
 
         const direction = new Vector3()
@@ -174,7 +258,9 @@ function PlayerBase(props) {
         const frontVector = new Vector3(
             0,
             0,
-            (moveBackward ? 1 : 0) - (moveForward ? 1 : 0)
+            // Disabled for now
+            // (moveBackward ? 1 : 0) - (moveForward ? 1 : 0)
+            0
         )
 
         const sideVector = new Vector3(
