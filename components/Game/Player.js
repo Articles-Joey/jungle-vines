@@ -54,6 +54,8 @@ function PlayerBase(props) {
     // const { maxDistanceTraveled, setMaxDistanceTraveled } = useStore()
     const maxDistanceTraveled = useStore((state) => state.maxDistanceTraveled)
     const setMaxDistanceTraveled = useStore((state) => state.setMaxDistanceTraveled)
+    const cameraControlMethod = useStore((state) => state.cameraControlMethod);
+
     const setPlayerDisabled = useGameStore((state) => state.setPlayerDisabled)
 
     const { controllerState, setControllerState } = useControllerStore()
@@ -173,13 +175,30 @@ function PlayerBase(props) {
     //     setShift(isShifting)
     // }, [isShifting])
 
+    const updateCamera = (x, y, z) => {
+        if (cameraMode !== "Player") return;
+
+        if (cameraControlMethod === 'Side Scroll') {
+            camera.position.copy(new Vector3(x, y + 8, 50))
+            camera.lookAt(new Vector3(x, y, 0))
+        } else if (cameraControlMethod === 'Third Person') {
+            const offset = lastMove === "Right" ? -10 : 10;
+            const lookDir = lastMove === "Right" ? 10 : -10;
+            camera.position.copy(new Vector3(x + offset, y + 5, 0))
+            camera.lookAt(new Vector3(x + lookDir, y, 0))
+        } else if (cameraControlMethod === 'First Person') {
+            const lookDir = lastMove === "Right" ? 10 : -10;
+            camera.position.copy(new Vector3(x, y + 0.5, 0))
+            camera.lookAt(new Vector3(x + lookDir, y, 0))
+        } else if (cameraControlMethod === 'Orbit') {
+            // Do nothing
+        }
+    }
+
     useFrame(({ clock }, delta) => {
 
         if (playerDisabled) {
-            if (cameraMode == "Player") {
-                camera.position.copy(new Vector3(pos.current[0], pos.current[1] + 8, 50))
-                camera.lookAt(new Vector3(pos.current[0], pos.current[1], 0))
-            }
+            updateCamera(pos.current[0], pos.current[1], pos.current[2])
             return
         }
 
@@ -210,10 +229,7 @@ function PlayerBase(props) {
             api.position.set(newPos.x, newPos.y, newPos.z)
             api.velocity.set(0, 0, 0)
 
-            if (cameraMode == "Player") {
-                camera.position.copy(new Vector3(newPos.x, newPos.y + 8, 50))
-                camera.lookAt(new Vector3(newPos.x, newPos.y, 0))
-            }
+            updateCamera(newPos.x, newPos.y, newPos.z)
 
             if ((jump || touchControls.jump)) {
                 console.log("Jump off rope")
@@ -242,10 +258,7 @@ function PlayerBase(props) {
             return
         }
 
-        if (cameraMode == "Player") {
-            camera.position.copy(new Vector3(pos.current[0], pos.current[1] + 8, 50))
-            camera.lookAt(new Vector3(pos.current[0], pos.current[1], 0))
-        }
+        updateCamera(pos.current[0], pos.current[1], pos.current[2])
 
         let posX = 0
         if (pos.current[0]) {

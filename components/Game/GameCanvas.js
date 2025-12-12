@@ -20,6 +20,7 @@ import MovingPlatform from "./MovingPlatform";
 import { ModelFly } from "../Models/Fly";
 import { ModelSpider } from "../Models/Spider";
 import BobbingSharkField from "./BobbingSharkField";
+import ProcedurallyGeneratedMapElements from "./ProcedurallyGeneratedMapElements";
 
 const texture = new TextureLoader().load(`${process.env.NEXT_PUBLIC_CDN}games/Race Game/grass.jpg`)
 
@@ -153,6 +154,13 @@ function GameCanvas(props) {
                     scale={0}
                 >
 
+                    <ProcedurallyGeneratedMapElements
+                        seed={12345}
+                        count={20}
+                        range={[200, 10]}
+                        startPosition={[3, 10, 0]}
+                    />
+
                     <MovingPlatform
                         position={[-20, 5, 0]}
                         args={[5, 1, 5]}
@@ -180,32 +188,34 @@ function GameCanvas(props) {
                     position={[0, 0.5, 0]}
                 /> */}
 
-                    <RopeSwing
-                        position={[
-                            10,
-                            10,
-                            0
-                        ]}
-                        args={[0.1, 0.1, 15, 8]}
-                    />
-
-                    <RopeSwing
-                        position={[
-                            20,
-                            10,
-                            0
-                        ]}
-                        args={[0.1, 0.1, 15, 8]}
-                    />
-
-                    <RopeSwing
-                        position={[
-                            30,
-                            10,
-                            0
-                        ]}
-                        args={[0.1, 0.1, 15, 8]}
-                    />
+                    {/* <>
+                        <RopeSwing
+                            position={[
+                                10,
+                                10,
+                                0
+                            ]}
+                            args={[0.1, 0.1, 15, 8]}
+                        />
+    
+                        <RopeSwing
+                            position={[
+                                20,
+                                10,
+                                0
+                            ]}
+                            args={[0.1, 0.1, 15, 8]}
+                        />
+    
+                        <RopeSwing
+                            position={[
+                                30,
+                                10,
+                                0
+                            ]}
+                            args={[0.1, 0.1, 15, 8]}
+                        />
+                    </> */}
 
                     <Platform
                         position={[50, -1, 0]}

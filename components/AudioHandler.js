@@ -2,8 +2,11 @@
 
 import { useEffect } from "react";
 import { useStore } from "@/hooks/useStore";
+import { usePathname } from "next/navigation";
 
 export default function AudioHandler() {
+
+    const pathname = usePathname();
 
     const audioSettings = useStore((state) => state?.audioSettings);
     const setAudioSettings = useStore((state) => state?.setAudioSettings);
@@ -17,21 +20,33 @@ export default function AudioHandler() {
 
     useEffect(() => {
 
+        if (pathname === "/") {
+            return () => {
+                music.pause();
+            };
+        }
+
         if (audioSettings?.enabled) {
             music.currentTime = 0;
-            music.play();
+            const playPromise = music.play();
+
+            if (playPromise !== undefined) {
+                playPromise.catch(() => {
+                    // Auto-play was prevented or interrupted
+                });
+            }
 
             music.onended = function () {
                 console.log('audio ended');
                 music.currentTime = 0;
-                music.play();
+                music.play().catch(() => {});
             };
         }
 
         return () => {
             music.pause();
         };
-    }, [audioSettings]);
+    }, [audioSettings, pathname]);
 
     return null;
 

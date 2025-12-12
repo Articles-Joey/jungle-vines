@@ -9,7 +9,7 @@ import { ModelSpider } from "../Models/Spider";
 function RopeEnemy({ position, args, swingSpeed, swingPhase, swingAmplitude }) {
     const setAttachedRope = useGameStore(state => state.setAttachedRope)
     const setPlayerDisabled = useGameStore(state => state.setPlayerDisabled)
-    
+
     const climbSpeed = 1;
     const climbRange = args[2] / 2;
 
@@ -30,9 +30,9 @@ function RopeEnemy({ position, args, swingSpeed, swingPhase, swingAmplitude }) {
     useFrame(({ clock }) => {
         const time = clock.getElapsedTime();
         const angle = Math.sin(time * swingSpeed + swingPhase) * swingAmplitude;
-        
+
         const climbPosition = -climbRange + Math.sin(time * climbSpeed) * climbRange;
-        
+
         const xEnemy = position[0] - climbPosition * Math.sin(angle);
         const yEnemy = position[1] + climbPosition * Math.cos(angle);
         const zEnemy = position[2];
@@ -47,15 +47,22 @@ function RopeEnemy({ position, args, swingSpeed, swingPhase, swingAmplitude }) {
     )
 }
 
-export default function RopeSwing({ args, position, rotation }) {
+export default function RopeSwing({
+    args = [0.1, 0.1, 15, 8],
+    position,
+    rotation,
+    swingSpeed: propSwingSpeed,
+    swingPhase: propSwingPhase,
+    hasEnemy: propHasEnemy
+}) {
 
     const groupRef = useRef();
-    
+
     const { swingSpeed, swingPhase, hasEnemy } = useMemo(() => ({
-        swingSpeed: 1.5 + Math.random() * 1, // Random speed between 1.5 and 2.5
-        swingPhase: Math.random() * Math.PI * 2, // Random starting point
-        hasEnemy: Math.random() > 0.5 // 50% chance of enemy
-    }), [])
+        swingSpeed: propSwingSpeed ?? (1.5 + Math.random() * 1), // Random speed between 1.5 and 2.5
+        swingPhase: propSwingPhase ?? (Math.random() * Math.PI * 2), // Random starting point
+        hasEnemy: propHasEnemy ?? (Math.random() > 0.5) // 50% chance of enemy
+    }), [propSwingSpeed, propSwingPhase, propHasEnemy])
 
     const swingAmplitude = Math.PI / 6; // Adjust the angle range (e.g., 30 degrees)
 
@@ -137,12 +144,12 @@ export default function RopeSwing({ args, position, rotation }) {
             </group>
 
             {hasEnemy && (
-                <RopeEnemy 
-                    position={position} 
-                    args={args} 
-                    swingSpeed={swingSpeed} 
-                    swingPhase={swingPhase} 
-                    swingAmplitude={swingAmplitude} 
+                <RopeEnemy
+                    position={position}
+                    args={args}
+                    swingSpeed={swingSpeed}
+                    swingPhase={swingPhase}
+                    swingAmplitude={swingAmplitude}
                 />
             )}
 

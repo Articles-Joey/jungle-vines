@@ -76,6 +76,18 @@ export const useGameStore = create((set) => ({
             gameState: newValue
         }))
     },
+
+    score: 0,
+    setScore: (newValue) => {
+        set((prev) => ({
+            score: newValue
+        }))
+    },
+    increaseScore: (amount) => {
+        set((prev) => ({
+            score: prev.score + amount
+        }))
+    },
 }))
 
 export const useControlsStore = create((set) => ({

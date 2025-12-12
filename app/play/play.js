@@ -21,6 +21,7 @@ import { useControllerStore } from '@/hooks/useControllerStore';
 import { useLocalStorageNew } from '@/hooks/useLocalStorageNew';
 import LeftPanelContent from '@/components/Game/LeftPanel';
 import { useSocketStore } from '@/hooks/useSocketStore';
+import { useGameStore } from '@/hooks/useGameStore';
 
 const GameCanvas = dynamic(() => import('@/components/Game/GameCanvas'), {
     ssr: false,
@@ -72,9 +73,12 @@ export default function GamePage() {
 
     const [gameState, setGameState] = useState(false)
 
+    const setPlayerDisabled = useGameStore(state => state.setPlayerDisabled)
+
     // Function to handle scene reload
     const reloadScene = () => {
         setSceneKey((prevKey) => prevKey + 1);
+        setPlayerDisabled(false);
     };
 
     const { isFullscreen, requestFullscreen, exitFullscreen } = useFullscreen();

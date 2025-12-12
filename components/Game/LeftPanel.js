@@ -9,6 +9,7 @@ import ArticlesButton from "@/components/UI/Button";
 import { useSocketStore } from "@/hooks/useSocketStore";
 import { useStore } from "@/hooks/useStore";
 import ScoreCard from "../UI/ScoreCard";
+import { Dropdown } from "react-bootstrap";
 // import { useIceSlideStore } from "./hooks/useIceSlideStore";
 // import { useEffect, useRef } from "react";
 // import { useHotkeys } from "react-hotkeys-hook";
@@ -49,6 +50,10 @@ export default function LeftPanelContent(props) {
     const darkMode = useStore((state) => state.darkMode);
     const toggleDarkMode = useStore((state) => state.toggleDarkMode);
     const setShowSettingsModal = useStore((state) => state.setShowSettingsModal);
+    const debugMode = useStore((state) => state.debugMode);
+    const setDebugMode = useStore((state) => state.setDebugMode);
+    const cameraControlMethod = useStore((state) => state.cameraControlMethod);
+    const setCameraControlMethod = useStore((state) => state.setCameraControlMethod);
 
     return (
         <div className='w-100'>
@@ -140,6 +145,34 @@ export default function LeftPanelContent(props) {
                         <i className="fad fa-cog"></i>
                         <span>Settings</span>
                     </ArticlesButton>
+
+                    <Dropdown>
+                        <Dropdown.Toggle variant="articles" className="w-50" id="dropdown-basic">
+                            Camera
+                        </Dropdown.Toggle>
+
+                        <Dropdown.Menu>
+
+                            <div className="p-2 border">
+                                Camera: {cameraControlMethod}
+                            </div>
+
+                            {[
+                                'Side Scroll', 'First Person', 'Third Person', 'Orbit'
+                            ].map((item, index) => (
+                                <Dropdown.Item
+                                    onClick={() => {
+                                        setCameraControlMethod(item)
+                                    }
+                                    }
+                                    key={index}
+                                >
+                                    {item}
+                                </Dropdown.Item>
+                            ))}
+
+                        </Dropdown.Menu>
+                    </Dropdown>
 
                 </div>
             </div>
@@ -236,6 +269,7 @@ export default function LeftPanelContent(props) {
                     <div className='d-flex flex-column'>
 
                         <div>
+
                             <ArticlesButton
                                 size="sm"
                                 className="w-50"
@@ -253,6 +287,19 @@ export default function LeftPanelContent(props) {
                                 <i className="fad fa-redo"></i>
                                 Reset Camera
                             </ArticlesButton>
+
+                            <ArticlesButton
+                                size="sm"
+                                className="w-50"
+                                active={debugMode}
+                                onClick={() => {
+                                    setDebugMode(!debugMode)
+                                }}
+                            >
+                                <i className="fad fa-code"></i>
+                                Debug Mode
+                            </ArticlesButton>
+
                         </div>
 
                     </div>
