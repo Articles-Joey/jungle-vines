@@ -1,9 +1,11 @@
 import React, { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { ModelQuaterniusFishingShark } from '../Models/Shark';
+
+import { ModelCrocodile } from '../Models/Crocodile';
+
 import { degToRad } from 'three/src/math/MathUtils';
 
-const BobbingShark = ({ position, speed, offset, scale = 2, rotationY = 0 }) => {
+const BobbingCrocodile = ({ position, speed, offset, scale = 0.01 }) => {
     const ref = useRef();
     // Initial Y position is taken from the passed position
     const initialY = position[1];
@@ -19,16 +21,16 @@ const BobbingShark = ({ position, speed, offset, scale = 2, rotationY = 0 }) => 
 
     return (
         <group ref={ref} position={position}>
-            <ModelQuaterniusFishingShark 
+            <ModelCrocodile 
                 scale={scale} 
-                rotation={[0, rotationY, 0]} 
+                rotation={[0, degToRad(-90), 0]} 
             />
         </group>
     );
 };
 
-const BobbingSharkField = ({ count = 10, range = [100, 0, 20], basePosition = [0, -15, 0] }) => {
-    const sharks = useMemo(() => {
+const BobbingCrocodileField = ({ count = 10, range = [100, 0, 20], basePosition = [0, -15, 0] }) => {
+    const crocodiles = useMemo(() => {
         return new Array(count).fill(0).map((_, i) => {
             return {
                 position: [
@@ -38,7 +40,6 @@ const BobbingSharkField = ({ count = 10, range = [100, 0, 20], basePosition = [0
                 ],
                 speed: 0.5 + Math.random() * 1.5, // Random speed between 0.5 and 2
                 offset: Math.random() * Math.PI * 2, // Random starting phase
-                rotationY: Math.random() * Math.PI * 2,
                 key: i
             };
         });
@@ -46,17 +47,16 @@ const BobbingSharkField = ({ count = 10, range = [100, 0, 20], basePosition = [0
 
     return (
         <>
-            {sharks.map(shark => (
-                <BobbingShark 
-                    key={shark.key} 
-                    position={shark.position} 
-                    speed={shark.speed} 
-                    offset={shark.offset} 
-                    rotationY={shark.rotationY}
+            {crocodiles.map(crocodile => (
+                <BobbingCrocodile 
+                    key={crocodile.key} 
+                    position={crocodile.position} 
+                    speed={crocodile.speed} 
+                    offset={crocodile.offset} 
                 />
             ))}
         </>
     );
 };
 
-export default BobbingSharkField;
+export default BobbingCrocodileField;

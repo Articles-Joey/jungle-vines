@@ -4,13 +4,24 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber"
 
 import { Debug, Physics, useBox, useCylinder, useSphere } from "@react-three/cannon";
 import { useGameStore } from "@/hooks/useGameStore";
+import { useStore } from "@/hooks/useStore";
 import { ModelSpider } from "../Models/Spider";
 
 function RopeEnemy({ position, args, swingSpeed, swingPhase, swingAmplitude }) {
+
+    const seed = useStore(state => state.seed);
+
     const setAttachedRope = useGameStore(state => state.setAttachedRope)
     const setPlayerDisabled = useGameStore(state => state.setPlayerDisabled)
 
-    const climbSpeed = 1;
+    // const climbSpeed = 1;
+    const climbSpeed = useMemo(() => {
+        const s = Number(seed) || 0;
+        // Use a pseudo-random function based on seed and position
+        const rand = Math.abs(Math.sin(s + position[0] * 12.9898 + position[1] * 78.233));
+        return 0.2 + rand * 0.8; // Speed between 0.2 and 1.0
+    }, [seed, position]);
+
     const climbRange = args[2] / 2;
 
     const [enemyRef, enemyApi] = useSphere(() => ({

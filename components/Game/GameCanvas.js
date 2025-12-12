@@ -21,6 +21,8 @@ import { ModelFly } from "../Models/Fly";
 import { ModelSpider } from "../Models/Spider";
 import BobbingSharkField from "./BobbingSharkField";
 import ProcedurallyGeneratedMapElements from "./ProcedurallyGeneratedMapElements";
+import { useStore } from "@/hooks/useStore";
+import BobbingCrocodileField from "./BobbingCrocodileField";
 
 const texture = new TextureLoader().load(`${process.env.NEXT_PUBLIC_CDN}games/Race Game/grass.jpg`)
 
@@ -67,6 +69,8 @@ function GameCanvas(props) {
 
     const [[a, b, c, d, e]] = useState(() => [...Array(5)].map(createRef))
 
+    const debugMode = useStore(state => state.debugMode);
+
     return (
         <Canvas camera={{ position: [0, 10, 30], fov: 50 }}>
 
@@ -85,11 +89,22 @@ function GameCanvas(props) {
             <ambientLight intensity={3} />
             {/* <spotLight intensity={30000} position={[0, -10, 0]} angle={5} penumbra={1} /> */}
 
-            <Image
+            {/* <Image
                 url={`${process.env.NEXT_PUBLIC_CDN}games/Jungle Vines/jungle-vines-game-background.svg`}
                 scale={[100, 50]}
                 position={[0, 10, -40]}
-            />
+            /> */}
+
+
+
+            {[...Array(9)].map((_, i) => (
+                <Image
+                    key={i}
+                    url={`img/background1.png`}
+                    scale={[50, 50]}
+                    position={[(-100 + (i * 50)), 10, -40]}
+                />
+            ))}
 
             {/* <pointLight position={[-10, -10, -10]} /> */}
 
@@ -133,6 +148,12 @@ function GameCanvas(props) {
                 basePosition={[0, -15, 0]}
             />
 
+            <BobbingCrocodileField
+                count={10}
+                range={[100, 0, -100]}
+                basePosition={[0, -17, 0]}
+            />
+
             {/* <ModelFly
                 position={[0, 10, 0]}
                 rotation={[0, degToRad(-90), 0]}
@@ -151,7 +172,7 @@ function GameCanvas(props) {
             <Physics>
 
                 <Debug
-                    scale={0}
+                    scale={debugMode ? 1 : 0}
                 >
 
                     <ProcedurallyGeneratedMapElements
@@ -265,6 +286,18 @@ function GameCanvas(props) {
                         args={[5, 1, 5]}
                         range={5}
                         speed={1}
+                    />
+
+                    <Platform
+                        position={[225, -1, 0]}
+                        args={[25, 1, 2.5]}
+                        color={"saddlebrown"}
+                    />
+
+                    <Platform
+                        position={[225, 0, 0]}
+                        args={[25, 1, 2.5]}
+                        color={"green"}
                     />
 
                 </Debug>

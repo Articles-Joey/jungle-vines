@@ -25,3 +25,4 @@ This game is inspired by the Toontown Online Trolley Game: [Jungle Vines](https:
 [Spider Model](https://poly.pizza/m/yRYJiAJyiM)  
 [Fly Model](https://poly.pizza/m/f8kM9xA_5sV)  
 [Bat Model](https://poly.pizza/m/hNO9XvjlKa)  
+[Crocodile Model](https://poly.pizza/m/fnUp2MrGjmr)  
