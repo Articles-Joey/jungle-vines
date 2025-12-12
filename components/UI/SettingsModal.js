@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Modal, Form } from "react-bootstrap"
 
 import ArticlesButton from "@/components/UI/Button";
+import { useStore } from "@/hooks/useStore";
 
 export default function SettingsModal({
     show,
@@ -14,6 +15,9 @@ export default function SettingsModal({
     const [lightboxData, setLightboxData] = useState(null)
 
     const [tab, setTab] = useState('Controls')
+
+    const audioSettings = useStore(state => state.audioSettings)
+    const setAudioSettings = useStore(state => state.setAudioSettings)
 
     return (
         <>
@@ -80,7 +84,7 @@ export default function SettingsModal({
                                         action: 'Move Right',
                                         defaultKeyboardKey: 'D'
                                     },
-                                                                        {
+                                    {
                                         action: 'Move Up on Vine',
                                         defaultKeyboardKey: 'W'
                                     },
@@ -105,7 +109,7 @@ export default function SettingsModal({
 
                                                 <div className="badge badge-hover border bg-articles me-1">{obj.defaultKeyboardKey}</div>
 
-                                                <ArticlesButton 
+                                                <ArticlesButton
                                                     className=""
                                                     small
                                                 >
@@ -119,12 +123,54 @@ export default function SettingsModal({
                             </div>
                         }
                         {tab == 'Audio' &&
-                            <>
-                                <Form.Label className="mb-0">Game Volume</Form.Label>
-                                <Form.Range />
-                                <Form.Label className="mb-0">Music Volume</Form.Label>
-                                <Form.Range />
-                            </>
+                            <div className="p-2">
+                                <>
+                                    <div className="mb-4">
+                                        <div className="mb-0">Audio</div>
+                                        <div>
+                                            <ArticlesButton
+                                                className=""
+                                                small
+                                                active={!audioSettings.enabled}
+                                                onClick={() => setAudioSettings({
+                                                    ...audioSettings,
+                                                    enabled: !audioSettings.enabled
+                                                })}
+                                            >
+                                                Disabled
+                                            </ArticlesButton>
+                                            <ArticlesButton
+                                                className=""
+                                                small
+                                                active={audioSettings.enabled}
+                                                onClick={() => setAudioSettings({
+                                                    ...audioSettings,
+                                                    enabled: !audioSettings.enabled
+                                                })}
+                                            >
+                                                Enabled
+                                            </ArticlesButton>
+                                        </div>
+                                    </div>
+
+                                    <Form.Label className="mb-0">Game Volume</Form.Label>
+                                    <Form.Range
+                                        value={audioSettings.soundEffectsVolume}
+                                        onChange={(e) => setAudioSettings({ 
+                                            ...audioSettings,
+                                            soundEffectsVolume: e.target.value 
+                                        })}
+                                    />
+                                    <Form.Label className="mb-0">Music Volume</Form.Label>
+                                    <Form.Range
+                                        value={audioSettings.backgroundMusicVolume}
+                                        onChange={(e) => setAudioSettings({ 
+                                            ...audioSettings,
+                                            backgroundMusicVolume: e.target.value 
+                                        })}
+                                    />
+                                </>
+                            </div>
                         }
                         {tab == 'Chat' &&
                             <>

@@ -12,6 +12,8 @@ import "@/styles/index.scss";
 import SocketLogicHandler from "@/components/SocketLogicHandler";
 import { Suspense } from 'react';
 import DarkModeHandler from '@/components/UI/DarkModeHandler';
+import ClientModals from '@/components/UI/ClientModals';
+import AudioHandler from '@/components/AudioHandler';
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -24,7 +26,7 @@ import DarkModeHandler from '@/components/UI/DarkModeHandler';
 // });
 
 export const metadata = {
-  title: "Platformer Escape",
+  title: "Jungle Vines",
   description: "",
 };
 
@@ -45,9 +47,10 @@ export default function RootLayout({ children }) {
       // className={`${geistSans.variable} ${geistMono.variable}`}
       >
 
-        <SocketLogicHandler />
-
         <Suspense>
+          <SocketLogicHandler />
+          <AudioHandler />
+          <ClientModals />
           <DarkModeHandler />
         </Suspense>
 

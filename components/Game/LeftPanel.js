@@ -48,6 +48,7 @@ export default function LeftPanelContent(props) {
 
     const darkMode = useStore((state) => state.darkMode);
     const toggleDarkMode = useStore((state) => state.toggleDarkMode);
+    const setShowSettingsModal = useStore((state) => state.setShowSettingsModal);
 
     return (
         <div className='w-100'>
@@ -126,6 +127,18 @@ export default function LeftPanelContent(props) {
                     >
                         <i className="fad fa-sun"></i>
                         <span>Dark Mode</span>
+                    </ArticlesButton>
+
+                    <ArticlesButton
+                        className='w-50'
+                        small
+                        // active={darkMode}
+                        onClick={() => {
+                            setShowSettingsModal(true)
+                        }}
+                    >
+                        <i className="fad fa-cog"></i>
+                        <span>Settings</span>
                     </ArticlesButton>
 
                 </div>

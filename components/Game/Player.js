@@ -40,6 +40,13 @@ function PlayerBase(props) {
         playerDisabled,
     } = useGameStore()
 
+    useEffect(() => {
+        if (playerDisabled) {
+            const audio = new Audio("/audio/roblox-death-sound.mp3")
+            audio.play()
+        }
+    }, [playerDisabled])
+
     const {
         touchControls, setTouchControls
     } = useControlsStore()
@@ -114,6 +121,16 @@ function PlayerBase(props) {
         userData: { tag: 'player' }
     }))
 
+    useEffect(() => {
+        if (playerDisabled) {
+            api.collisionFilterGroup.set(0)
+            api.collisionFilterMask.set(0)
+        } else {
+            api.collisionFilterGroup.set(1)
+            api.collisionFilterMask.set(-1)
+        }
+    }, [playerDisabled])
+
     const material = new THREE.MeshPhysicalMaterial({
         color: 'red',
     });
@@ -156,7 +173,7 @@ function PlayerBase(props) {
     //     setShift(isShifting)
     // }, [isShifting])
 
-    useFrame(({ clock }) => {
+    useFrame(({ clock }, delta) => {
 
         if (playerDisabled) {
             if (cameraMode == "Player") {
@@ -167,12 +184,22 @@ function PlayerBase(props) {
         }
 
         if (attachedRope) {
-            if (moveForward) ropeHeight.current -= 0.1
-            if (moveBackward) ropeHeight.current += 0.1
+            let climbVelocity = 0;
+            const climbSpeed = 6;
+
+            if (moveForward) {
+                ropeHeight.current -= climbSpeed * delta
+                climbVelocity = -climbSpeed;
+            }
+            if (moveBackward) {
+                ropeHeight.current += climbSpeed * delta
+                climbVelocity = climbSpeed;
+            }
             ropeHeight.current = Math.max(1, Math.min(ropeHeight.current, attachedRope.length))
 
             const time = clock.getElapsedTime();
-            const angle = Math.sin(time * attachedRope.swingSpeed) * attachedRope.swingAmplitude;
+            const phase = attachedRope.swingPhase || 0;
+            const angle = Math.sin(time * attachedRope.swingSpeed + phase) * attachedRope.swingAmplitude;
             
             const pivot = new Vector3(...attachedRope.position)
             const offset = new Vector3(0, -ropeHeight.current, 0)
@@ -196,13 +223,17 @@ function PlayerBase(props) {
                 const w = attachedRope.swingSpeed;
                 const A = attachedRope.swingAmplitude;
                 const L = ropeHeight.current;
+                const phase = attachedRope.swingPhase || 0;
                 
-                const thetaDot = A * w * Math.cos(time * w);
+                const thetaDot = A * w * Math.cos(time * w + phase);
                 
                 const vx = L * Math.cos(angle) * thetaDot;
                 const vy = L * Math.sin(angle) * thetaDot;
 
-                api.velocity.set(vx, vy + JUMP_FORCE, 0)
+                const radialVx = climbVelocity * Math.sin(angle);
+                const radialVy = climbVelocity * -Math.cos(angle);
+
+                api.velocity.set(vx + radialVx, vy + radialVy + JUMP_FORCE, 0)
 
                 if (touchControls.jump) {
                     setTouchControls({ ...touchControls, jump: false })

@@ -24,22 +24,14 @@ import ScoreCard from '@/components/UI/ScoreCard';
 //     ssr: false,
 // });
 
-const InfoModal = dynamic(
-    () => import('@/components/UI/InfoModal'),
-    { ssr: false }
-)
 
-const SettingsModal = dynamic(
-    () => import('@/components/UI/SettingsModal'),
-    { ssr: false }
-)
+
+
 
 // const PrivateGameModal = dynamic(
 //     () => import('app/(site)/community/games/four-frogs/components/PrivateGameModal'),
 //     { ssr: false }
 // )
-
-const assets_src = 'games/Cannon/'
 
 const game_key = 'jungle-vines'
 const game_name = 'Jungle Vines'
@@ -60,6 +52,10 @@ export default function LobbyPage() {
     const setNickname = useStore((state) => state.setNickname);
     const _hasHydrated = useStore((state) => state._hasHydrated);
     const maxDistanceTraveled = useStore((state) => state.maxDistanceTraveled);
+
+    const setShowSettingsModal = useStore((state) => state.setShowSettingsModal);
+        const showInfoModal = useStore((state) => state.showInfoModal);
+    const setShowInfoModal = useStore((state) => state.setShowInfoModal);
 
     const setRandomNickname = () => {
         const randomNicknames = [
@@ -104,8 +100,9 @@ export default function LobbyPage() {
 
     }, [nickname, _hasHydrated])
 
-    const [showInfoModal, setShowInfoModal] = useState(false)
-    const [showSettingsModal, setShowSettingsModal] = useState(false)
+    // const [showInfoModal, setShowInfoModal] = useState(false)
+
+    
     const [showPrivateGameModal, setShowPrivateGameModal] = useState(false)
 
     const [lobbyDetails, setLobbyDetails] = useState({
@@ -115,14 +112,14 @@ export default function LobbyPage() {
 
     useEffect(() => {
 
-        setShowInfoModal(localStorage.getItem('game:four-frogs:rulesAnControls') === 'true' ? true : false)
+        // setShowInfoModal(localStorage.getItem('game:four-frogs:rulesAnControls') === 'true' ? true : false)
 
         // if (userReduxState._id) {
         //     console.log("Is user")
         // }
 
-        socket.on('game:death-race-landing-details', function (msg) {
-            console.log('game:death-race-landing-details', msg)
+        socket.on('game:jungle-vines-landing-details', function (msg) {
+            console.log('game:jungle-vines-landing-details', msg)
 
             if (JSON.stringify(msg) !== JSON.stringify(lobbyDetails)) {
                 setLobbyDetails(msg)
@@ -130,25 +127,25 @@ export default function LobbyPage() {
         });
 
         return () => {
-            socket.off('game:death-race-landing-details');
+            socket.off('game:jungle-vines-landing-details');
         };
 
     }, [])
 
     useEffect(() => {
 
-        localStorage.setItem('game:four-frogs:rulesAnControls', showInfoModal)
+        localStorage.setItem('game:jungle-vines:rulesAnControls', showInfoModal)
 
     }, [showInfoModal])
 
     useEffect(() => {
 
         if (socket.connected) {
-            socket.emit('join-room', 'game:death-race-landing');
+            socket.emit('join-room', 'game:jungle-vines-landing');
         }
 
         return function cleanup() {
-            socket.emit('leave-room', 'game:death-race-landing')
+            socket.emit('leave-room', 'game:jungle-vines-landing')
         };
 
     }, [socket.connected]);
@@ -156,20 +153,6 @@ export default function LobbyPage() {
     return (
 
         <div className="jungle-vines-landing-page">
-
-            {showInfoModal &&
-                <InfoModal
-                    show={showInfoModal}
-                    setShow={setShowInfoModal}
-                />
-            }
-
-            {showSettingsModal &&
-                <SettingsModal
-                    show={showSettingsModal}
-                    setShow={setShowSettingsModal}
-                />
-            }
 
             {/* {showPrivateGameModal &&
                 <PrivateGameModal

@@ -2,6 +2,8 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber"
 
 import { Debug, Physics, useBox, useCylinder, useSphere } from "@react-three/cannon";
 import { useGameStore } from "@/hooks/useGameStore";
+import { ModelBat } from "../Models/Bat";
+import { degToRad } from "three/src/math/MathUtils";
 
 export default function FlyingEnemy({  args = [1, 1, 1], position = [0, 4, 0] }) {
 
@@ -43,6 +45,14 @@ export default function FlyingEnemy({  args = [1, 1, 1], position = [0, 4, 0] })
         <mesh ref={ref} castShadow>
             <boxGeometry args={[1, 1, 1]} />
             <meshStandardMaterial color="red" />
+            <group
+                rotation={[0, 0, degToRad(60)]}
+            >
+                <ModelBat 
+                    rotation={[0, Math.PI / -2, 0]}
+                    position={[0, -2, 0]}
+                />
+            </group>
         </mesh>
     )
 

@@ -16,7 +16,7 @@ export function ModelQuaterniusFishingShark(props) {
   const { scene, animations } = useGLTF(link)
   const clone = React.useMemo(() => SkeletonUtils.clone(scene), [scene])
   const { nodes, materials } = useGraph(clone)
-  const { actions } = useAnimations(animations, group)
+  // const { actions } = useAnimations(animations, group)
   return (
     <group ref={group} {...props} dispose={null}>
       <group name="Scene">

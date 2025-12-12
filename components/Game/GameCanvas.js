@@ -15,6 +15,11 @@ import { ModelQuaterniusFishingPiranha } from "@/components/Models/Piranha";
 import { ModelQuaterniusFishingShark } from "@/components/Models/Shark";
 import FlyingEnemy from "./FlyingEnemy";
 import RopeSwing from "./RopeSwing";
+import Platform from "./Platform";
+import MovingPlatform from "./MovingPlatform";
+import { ModelFly } from "../Models/Fly";
+import { ModelSpider } from "../Models/Spider";
+import BobbingSharkField from "./BobbingSharkField";
 
 const texture = new TextureLoader().load(`${process.env.NEXT_PUBLIC_CDN}games/Race Game/grass.jpg`)
 
@@ -115,15 +120,45 @@ function GameCanvas(props) {
                 position={[0, -15, 0]}
             />
 
-            <ModelQuaterniusFishingShark
+            {/* <ModelQuaterniusFishingShark
                 position={[10, -15, 0]}
                 scale={2}
                 rotation={[0, degToRad(-90), 0]}
+            /> */}
+
+            <BobbingSharkField
+                count={10}
+                range={[100, 0, -100]}
+                basePosition={[0, -15, 0]}
             />
+
+            {/* <ModelFly
+                position={[0, 10, 0]}
+                rotation={[0, degToRad(-90), 0]}
+                
+            /> */}
+
+            {/* <ModelSpider
+                scale={1}
+                // position={[0, 10, 0]}
+            /> */}
+            {/* <ModelSpider
+                scale={1}
+                // position={[20, 10, 0]}
+            /> */}
 
             <Physics>
 
-                <Debug>
+                <Debug
+                    scale={0}
+                >
+
+                    <MovingPlatform
+                        position={[-20, 5, 0]}
+                        args={[5, 1, 5]}
+                        range={5}
+                        speed={1}
+                    />
 
                     <Platform
                         position={[-10, -1, 0]}
@@ -184,8 +219,42 @@ function GameCanvas(props) {
                         color={"green"}
                     />
 
+                    <RopeSwing
+                        position={[
+                            70,
+                            10,
+                            0
+                        ]}
+                        args={[0.1, 0.1, 15, 8]}
+                    />
+
+                    <RopeSwing
+                        position={[
+                            80,
+                            10,
+                            0
+                        ]}
+                        args={[0.1, 0.1, 15, 8]}
+                    />
+
+                    <RopeSwing
+                        position={[
+                            90,
+                            10,
+                            0
+                        ]}
+                        args={[0.1, 0.1, 15, 8]}
+                    />
+
                     <FlyingEnemy
 
+                    />
+
+                    <MovingPlatform
+                        position={[100, 5, 0]}
+                        args={[5, 1, 5]}
+                        range={5}
+                        speed={1}
                     />
 
                 </Debug>
@@ -197,21 +266,3 @@ function GameCanvas(props) {
 }
 
 export default memo(GameCanvas)
-
-function Platform({ args, position, color }) {
-
-    const [ref, api] = useBox(() => ({
-        mass: 0,
-        type: 'Static',
-        args: args,
-        position: position,
-    }))
-
-    return (
-        <mesh ref={ref} castShadow>
-            <boxGeometry args={args} />
-            <meshStandardMaterial color={color} />
-        </mesh>
-    )
-
-}
