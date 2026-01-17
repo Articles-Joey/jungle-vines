@@ -5,7 +5,17 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: calc(100vh - 100px);
+    min-height: calc(100vh - 0px);
+
+    .hero {
+        .hero-title {
+            font-size: 3rem;
+            text-align: center;
+            color: #fff;
+            text-shadow: 1px 4px 5px rgb(84, 126, 7);
+            margin-bottom: 1rem;
+        }
+    }
 
     .servers {
         display: grid;
@@ -42,6 +52,7 @@
         top: 0;
         width: 100%;
         height: 100%;
+        z-index: -1;
 
         img {
             // backdrop-filter: blur(8px);

@@ -43,6 +43,9 @@ export const useStore = create()(
       showInfoModal: false,
       setShowInfoModal: (newValue) => set({ showInfoModal: newValue }),
 
+      showCreditsModal: false,
+      setShowCreditsModal: (newValue) => set({ showCreditsModal: newValue }),
+
       audioSettings: {
         enabled: true,
         backgroundMusicVolume: 50,
