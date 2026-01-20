@@ -58,7 +58,7 @@ export default function LobbyPage() {
         isLoading: userTokenLoading,
         mutate: userTokenMutate
     } = useUserToken(
-        "3030"
+        "3042"
     );
 
     const {

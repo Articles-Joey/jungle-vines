@@ -1,6 +1,5 @@
 import { useStore } from "@/hooks/useStore"
 import ArticlesButton from "./Button"
-import { set } from "date-fns"
 
 export default function ScoreCard({ score }) {
 
