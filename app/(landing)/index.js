@@ -5,32 +5,12 @@ import Image from 'next/image'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 
-// import { useSelector, useDispatch } from 'react-redux'
-
-// import ROUTES from 'components/constants/routes'
-
 import ArticlesButton from '@/components/UI/Button';
-// import SingleInput from '@/components/Articles/SingleInput';
-import { useLocalStorageNew } from '@/hooks/useLocalStorageNew';
-// import IsDev from '@/components/IsDev';
-// import { ChromePicker } from 'react-color';
+
 import { useSocketStore } from '@/hooks/useSocketStore';
 import { useStore } from '@/hooks/useStore';
 import ScoreCard from '@/components/UI/ScoreCard';
 
-// import GameScoreboard from 'components/Games/GameScoreboard'
-
-// const Ad = dynamic(() => import('components/Ads/Ad'), {
-//     ssr: false,
-// });
-
-// const PrivateGameModal = dynamic(
-//     () => import('app/(site)/community/games/four-frogs/components/PrivateGameModal'),
-//     { ssr: false }
-// )
-
-import GameScoreboard from '@articles-media/articles-dev-box/GameScoreboard';
-import Ad from '@articles-media/articles-dev-box/Ad';
 import GameMenuPrimaryButtonGroup from '@articles-media/articles-dev-box/GameMenuPrimaryButtonGroup';
 import NicknameInput from '@articles-media/articles-dev-box/NicknameInput';
 import SessionButton from '@articles-media/articles-dev-box/SessionButton';
@@ -39,13 +19,18 @@ import useUserDetails from '@articles-media/articles-dev-box/useUserDetails';
 import useUserToken from '@articles-media/articles-dev-box/useUserToken';
 import { PieMenu } from '@articles-media/articles-gamepad-helper';
 
+const Ad = dynamic(() =>
+    import('@articles-media/articles-dev-box/Ad'),
+    { ssr: false }
+);
+const GameScoreboard = dynamic(() =>
+    import('@articles-media/articles-dev-box/GameScoreboard'),
+    { ssr: false }
+);
 const ReturnToLauncherButton = dynamic(() =>
     import('@articles-media/articles-dev-box/ReturnToLauncherButton'),
     { ssr: false }
 );
-
-const game_key = 'jungle-vines'
-const game_name = 'Jungle Vines'
 
 export default function LobbyPage() {
 
@@ -61,7 +46,7 @@ export default function LobbyPage() {
         isLoading: userTokenLoading,
         mutate: userTokenMutate
     } = useUserToken(
-        "3042"
+        process.env.NEXT_PUBLIC_GAME_PORT
     );
 
     const {
@@ -73,81 +58,15 @@ export default function LobbyPage() {
         token: userToken
     });
 
-    // const userReduxState = useSelector((state) => state.auth.user_details)
-    const userReduxState = false
-
-    // const [nickname, setNickname] = useLocalStorageNew("game:nickname", userReduxState.display_name)
     const darkMode = useStore((state) => state.darkMode)
-    const nickname = useStore((state) => state.nickname);
-    const setNickname = useStore((state) => state.setNickname);
-    const _hasHydrated = useStore((state) => state._hasHydrated);
     const maxDistanceTraveled = useStore((state) => state.maxDistanceTraveled);
 
     const setShowSettingsModal = useStore((state) => state.setShowSettingsModal);
-    const showInfoModal = useStore((state) => state.showInfoModal);
-    const setShowInfoModal = useStore((state) => state.setShowInfoModal);
     const setShowCreditsModal = useStore((state) => state.setShowCreditsModal);
 
-    const setRandomNickname = () => {
-        const randomNicknames = [
-            "JungleJumper",
-            "VineSwinger",
-            "TarzanTitan",
-            "MonkeyMaster",
-            "BananaBoss",
-            "CanopyKing",
-            "TreeTopTrekker",
-            "WildWalker",
-            "ForestPhantom",
-            "RopeRanger",
-            "LeafLeaper",
-            "PrimatePro",
-            "SafariScout",
-            "GorillaGlider",
-            "ChimpChamp",
-            "AmazonAce",
-            "RainforestRacer",
-            "BranchBounder",
-            "TropicalTraveler",
-            "SavageSwinger"
-        ];
-
-        const randomIndex = Math.floor(Math.random() * randomNicknames.length);
-        setNickname(randomNicknames[randomIndex]);
-    }
-
-    // Only do once so user can set name from nothing without retriggering
-    const [initialRandomName, setInitialRandomName] = useState(false)
-    useEffect(() => {
-
-        // console.log("nickname", nickname)
-        // console.log("rehydrated", _hasHydrated)
-
-        if (!nickname && _hasHydrated && !initialRandomName) {
-            console.log("No nickname set, set a random!")
-            setRandomNickname()
-            setInitialRandomName(true)
-        }
-
-    }, [nickname, _hasHydrated])
-
-    // const [showInfoModal, setShowInfoModal] = useState(false)
-
-
-    const [showPrivateGameModal, setShowPrivateGameModal] = useState(false)
-
-    const [lobbyDetails, setLobbyDetails] = useState({
-        players: [],
-        games: [],
-    })
+    const lobbyDetails = useStore((state) => state.lobbyDetails);
 
     useEffect(() => {
-
-        // setShowInfoModal(localStorage.getItem('game:four-frogs:rulesAnControls') === 'true' ? true : false)
-
-        // if (userReduxState._id) {
-        //     console.log("Is user")
-        // }
 
         socket.on('game:jungle-vines-landing-details', function (msg) {
             console.log('game:jungle-vines-landing-details', msg)
@@ -162,12 +81,6 @@ export default function LobbyPage() {
         };
 
     }, [])
-
-    useEffect(() => {
-
-        localStorage.setItem('game:jungle-vines:rulesAnControls', showInfoModal)
-
-    }, [showInfoModal])
 
     useEffect(() => {
 
@@ -241,7 +154,7 @@ export default function LobbyPage() {
                 />
             </div>
 
-            <div className="container d-flex flex-column justify-content-center align-items-center">
+            <div className="container d-flex flex-column justify-content-center align-items-center py-3">
 
                 <div
                     style={{ "width": "20rem" }}
@@ -256,7 +169,7 @@ export default function LobbyPage() {
                         </div>
 
                         <div className='hero-title stick-regular'>
-                            {game_name}
+                            {process.env.NEXT_PUBLIC_GAME_NAME}
                         </div>
 
                     </div>
@@ -411,12 +324,8 @@ export default function LobbyPage() {
 
                 </div>
 
-                {/* <GameScoreboard game="Death Race" /> */}
-
-                {/* <Ad section={"Games"} section_id={game_name} /> */}
-
                 <GameScoreboard
-                    game={game_name}
+                    game={process.env.NEXT_PUBLIC_GAME_NAME}
                     style="Default"
                     darkMode={darkMode ? true : false}
                 />
@@ -424,7 +333,7 @@ export default function LobbyPage() {
                 <Ad
                     style="Default"
                     section={"Games"}
-                    section_id={game_name}
+                    section_id={process.env.NEXT_PUBLIC_GAME_NAME}
                     darkMode={darkMode ? true : false}
                     user_ad_token={userToken}
                     userDetails={userDetails}
