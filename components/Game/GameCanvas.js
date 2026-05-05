@@ -24,69 +24,43 @@ import ProcedurallyGeneratedMapElements from "./ProcedurallyGeneratedMapElements
 import { useStore } from "@/hooks/useStore";
 import BobbingCrocodileField from "./BobbingCrocodileField";
 
-const texture = new TextureLoader().load(`${process.env.NEXT_PUBLIC_CDN}games/Race Game/grass.jpg`)
-
-const GrassPlane = () => {
-
-    const width = 110; // Set the width of the plane
-    const height = 170; // Set the height of the plane
-
-    texture.magFilter = NearestFilter;
-    texture.wrapS = RepeatWrapping
-    texture.wrapT = RepeatWrapping
-    texture.repeat.set(5, 5)
-
-    return (
-        <>
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
-                <planeGeometry attach="geometry" args={[width, height]} />
-                <meshStandardMaterial attach="material" map={texture} />
-            </mesh>
-        </>
-    );
-};
-
 function GameCanvas(props) {
-
-    // const GPUTier = useDetectGPU()
-
-    // const {
-    //     playerRotation,
-    //     setPlayerRotation
-    // } = useCannonStore(state => ({
-    //     playerRotation: state.playerRotation,
-    //     setPlayerRotation: state.setPlayerRotation
-    // }));
-
-    const {
-        handleCameraChange,
-        gameState,
-        players,
-        move,
-        cameraInfo,
-        server
-    } = props;
 
     const [[a, b, c, d, e]] = useState(() => [...Array(5)].map(createRef))
 
-    const debugMode = useStore(state => state.debugMode);
+    const debug = useStore(state => state.debug);
+    const showStats = useStore(state => state.showStats);
+    const darkMode = useStore(state => state.darkMode);
+    const toontownMode = useStore(state => state.toontownMode);
 
     return (
         <Canvas camera={{ position: [0, 10, 30], fov: 50 }}>
+
+            {showStats && <>
+                <Stats className="stats-overlay" />
+            </>}
 
             <OrbitControls
             // autoRotate={gameState?.status == 'In Lobby'}
             />
 
-            <Sky
-                // distance={450000}
-                sunPosition={[0, 10, 0]}
-            // inclination={0}
-            // azimuth={0.25}
-            // {...props} 
-            />
+            {darkMode ?
+                <>
+                    <ambientLight intensity={3} />
+                    <Sky
+                        sunPosition={[0, -10, 0]}
+                        // intensity={0.1}
+                    />
+                </>
+                :
+                <>
+                    <ambientLight intensity={3} />
+                    <Sky
+                        sunPosition={[0, 10, 0]}
+                    />
+                </>
+            }
 
-            <ambientLight intensity={3} />
             {/* <spotLight intensity={30000} position={[0, -10, 0]} angle={5} penumbra={1} /> */}
 
             {/* <Image
@@ -95,14 +69,13 @@ function GameCanvas(props) {
                 position={[0, 10, -40]}
             /> */}
 
-
-
             {[...Array(9)].map((_, i) => (
                 <Image
                     key={i}
-                    url={`img/background1.png`}
+                    url={toontownMode ? `img/toon-background.png` : `img/background.webp`}
                     scale={[50, 50]}
                     position={[(-100 + (i * 50)), 10, -40]}
+                    color={darkMode ? "#888888" : "white"}
                 />
             ))}
 
@@ -172,7 +145,7 @@ function GameCanvas(props) {
             <Physics>
 
                 <Debug
-                    scale={debugMode ? 1 : 0}
+                    scale={debug ? 1 : 0}
                 >
 
                     <ProcedurallyGeneratedMapElements

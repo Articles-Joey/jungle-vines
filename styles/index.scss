@@ -4,6 +4,20 @@
 @use "./pages/landing" as *;
 @use "./pages/game" as *;
 
+:root {
+
+    .card {
+        // --bs-body-bg: #26491f;
+        --bs-card-bg: #26491f;
+        --bs-card-cap-bg: #1a3115;
+        --bs-card-cap-color: #fff;
+        --bs-card-color: #fff;
+        --bs-heading-color: #fff;
+        --bs-modal-color: #fff;
+    }
+
+}
+
 .stick-regular {
   font-family: "Stick", sans-serif;
   font-weight: 400;

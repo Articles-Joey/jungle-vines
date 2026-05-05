@@ -4,8 +4,11 @@ import { Debug, Physics, useBox, useCylinder, useSphere } from "@react-three/can
 import { useGameStore } from "@/hooks/useGameStore";
 import { ModelBat } from "../Models/Bat";
 import { degToRad } from "three/src/math/MathUtils";
+import { useStore } from "@/hooks/useStore";
 
 export default function FlyingEnemy({  args = [1, 1, 1], position = [0, 4, 0] }) {
+
+    const debug = useStore(state => state.debug);
 
     const setTeleport = useGameStore(state => state.setTeleport)
     const setPlayerDisabled = useGameStore(state => state.setPlayerDisabled)
@@ -45,8 +48,12 @@ export default function FlyingEnemy({  args = [1, 1, 1], position = [0, 4, 0] })
 
     return (
         <mesh ref={ref} castShadow>
-            <boxGeometry args={[1, 1, 1]} />
-            <meshStandardMaterial color="red" />
+
+            {debug && <>
+                <boxGeometry args={[1, 1, 1]} />
+                <meshStandardMaterial color="red" />
+            </>}
+
             <group
                 rotation={[0, 0, degToRad(60)]}
             >
@@ -55,6 +62,7 @@ export default function FlyingEnemy({  args = [1, 1, 1], position = [0, 4, 0] })
                     position={[0, -2, 0]}
                 />
             </group>
+
         </mesh>
     )
 

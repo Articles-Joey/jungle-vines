@@ -14,6 +14,9 @@ import { Dropdown } from "react-bootstrap";
 // import { useEffect, useRef } from "react";
 // import { useHotkeys } from "react-hotkeys-hook";
 
+import GameMenuPrimaryButtonGroup from '@articles-media/articles-dev-box/GameMenuPrimaryButtonGroup';
+import DebugPanel from "../UI/DebugPanel";
+
 export default function LeftPanelContent(props) {
 
     const {
@@ -43,15 +46,14 @@ export default function LeftPanelContent(props) {
 
     const {
         socket,
+        connected
     } = useSocketStore(state => ({
         socket: state.socket,
+        connected: state.connected
     }));
 
-    const darkMode = useStore((state) => state.darkMode);
-    const toggleDarkMode = useStore((state) => state.toggleDarkMode);
-    const setShowSettingsModal = useStore((state) => state.setShowSettingsModal);
-    const debugMode = useStore((state) => state.debugMode);
-    const setDebugMode = useStore((state) => state.setDebugMode);
+    const debug = useStore(state => state.debug);
+
     const cameraControlMethod = useStore((state) => state.cameraControlMethod);
     const setCameraControlMethod = useStore((state) => state.setCameraControlMethod);
 
@@ -61,6 +63,13 @@ export default function LeftPanelContent(props) {
             <div className="card card-articles card-sm">
 
                 <div className="card-body">
+
+                    <div className="d-flex flex-wrap mb-3">
+                        <GameMenuPrimaryButtonGroup
+                            useStore={useStore}
+                            type="GameMenu"
+                        />
+                    </div>
 
                     <div className='flex-header'>
                         <div>Server: {server}</div>
@@ -91,60 +100,6 @@ export default function LeftPanelContent(props) {
 
                         </div>
                     }
-
-                    <Link
-                        href={'/'}
-                        className=""
-                    >
-                        <ArticlesButton
-                            className='w-50'
-                            small
-                        >
-                            <i className="fad fa-arrow-alt-square-left"></i>
-                            <span>Leave Game</span>
-                        </ArticlesButton>
-                    </Link>
-
-                    <ArticlesButton
-                        small
-                        className="w-50"
-                        active={isFullscreen}
-                        onClick={() => {
-                            if (isFullscreen) {
-                                exitFullscreen()
-                            } else {
-                                requestFullscreen('jungle-vines-game-page')
-                            }
-                        }}
-                    >
-                        {isFullscreen && <span>Exit </span>}
-                        {!isFullscreen && <span><i className='fad fa-expand'></i></span>}
-                        <span>Fullscreen</span>
-                    </ArticlesButton>
-
-                    <ArticlesButton
-                        className='w-50'
-                        small
-                        active={darkMode}
-                        onClick={() => {
-                            toggleDarkMode()
-                        }}
-                    >
-                        <i className="fad fa-sun"></i>
-                        <span>Dark Mode</span>
-                    </ArticlesButton>
-
-                    <ArticlesButton
-                        className='w-50'
-                        small
-                        // active={darkMode}
-                        onClick={() => {
-                            setShowSettingsModal(true)
-                        }}
-                    >
-                        <i className="fad fa-cog"></i>
-                        <span>Settings</span>
-                    </ArticlesButton>
 
                     <Dropdown>
                         <Dropdown.Toggle variant="articles" className="w-50" id="dropdown-basic">
@@ -213,7 +168,7 @@ export default function LeftPanelContent(props) {
             <ScoreCard />
 
             {/* Touch Controls */}
-            <div
+            {/* <div
                 className="card card-articles card-sm"
             >
                 <div className="card-body">
@@ -251,61 +206,10 @@ export default function LeftPanelContent(props) {
                     </div>
 
                 </div>
-            </div>
+            </div> */}
 
             {/* Debug Controls */}
-            <div
-                className="card card-articles card-sm"
-            >
-                <div className="card-body">
-
-                    <div className="small text-muted">Debug Controls</div>
-
-                    <div className="small border p-2">
-                        {/* <div>Rotation Angle: {hitRotation}</div> */}
-                        {/* <div>Power: {hitPower}/100</div> */}
-                    </div>
-
-                    <div className='d-flex flex-column'>
-
-                        <div>
-
-                            <ArticlesButton
-                                size="sm"
-                                className="w-50"
-                                onClick={reloadScene}
-                            >
-                                <i className="fad fa-redo"></i>
-                                Reload Game
-                            </ArticlesButton>
-
-                            <ArticlesButton
-                                size="sm"
-                                className="w-50"
-                                onClick={reloadScene}
-                            >
-                                <i className="fad fa-redo"></i>
-                                Reset Camera
-                            </ArticlesButton>
-
-                            <ArticlesButton
-                                size="sm"
-                                className="w-50"
-                                active={debugMode}
-                                onClick={() => {
-                                    setDebugMode(!debugMode)
-                                }}
-                            >
-                                <i className="fad fa-code"></i>
-                                Debug Mode
-                            </ArticlesButton>
-
-                        </div>
-
-                    </div>
-
-                </div>
-            </div>
+            {debug && <DebugPanel />}
 
             {controllerState?.connected &&
                 <div className="panel-content-group p-0 text-dark">

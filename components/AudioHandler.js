@@ -1,46 +1,59 @@
 "use client";
 
-import { useEffect } from "react";
+import { useAudioStore } from "@/hooks/useAudioStore";
 import { useStore } from "@/hooks/useStore";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 
 export default function AudioHandler() {
 
     const pathname = usePathname();
+    const audioSettings = useAudioStore((state) => state?.audioSettings);
+    const setAudioSettings = useAudioStore((state) => state?.setAudioSettings);
 
-    const audioSettings = useStore((state) => state?.audioSettings);
-    const setAudioSettings = useStore((state) => state?.setAudioSettings);
-
-    let music
-
-    if (typeof window !== 'undefined') {
-        music = new Audio(`/audio/Jungle Vines.mp3`);
-        music.volume = audioSettings?.backgroundMusicVolume ? (audioSettings?.backgroundMusicVolume / 100) : 0; // Set volume based on initial state
-    }
+    const musicRef = useRef(null);
+    const interactedRef = useRef(false);
 
     useEffect(() => {
+        if (typeof window === 'undefined') return;
 
-        if (pathname === "/") {
-            return () => {
-                music.pause();
-            };
+        if (pathname === '/') {
+            if (musicRef.current) {
+                musicRef.current.pause();
+            }
+            return;
         }
 
-        if (audioSettings?.enabled) {
+        const music = new Audio(`/audio/Jungle Vines.mp3`);
+        music.volume = audioSettings?.enabled ? (audioSettings?.game_volume / 100) : 0;
+        musicRef.current = music;
+
+        music.onended = function () {
             music.currentTime = 0;
-            const playPromise = music.play();
+            music.play();
+        };
 
-            if (playPromise !== undefined) {
-                playPromise.catch(() => {
-                    // Auto-play was prevented or interrupted
-                });
-            }
-
-            music.onended = function () {
-                console.log('audio ended');
+        const tryPlay = () => {
+            if (!interactedRef.current && audioSettings?.enabled) {
+                interactedRef.current = true;
                 music.currentTime = 0;
-                music.play().catch(() => {});
-            };
+                music.play();
+            }
+        };
+
+        if (audioSettings?.enabled) {
+            if (interactedRef.current) {
+                music.currentTime = 0;
+                music.play();
+            } else {
+                const events = ['click', 'keydown', 'touchstart', 'pointerdown'];
+                events.forEach((e) => document.addEventListener(e, tryPlay, { once: true }));
+
+                return () => {
+                    events.forEach((e) => document.removeEventListener(e, tryPlay));
+                    music.pause();
+                };
+            }
         }
 
         return () => {

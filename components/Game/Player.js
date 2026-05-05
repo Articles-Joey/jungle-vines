@@ -55,6 +55,7 @@ function PlayerBase(props) {
     const maxDistanceTraveled = useStore((state) => state.maxDistanceTraveled)
     const setMaxDistanceTraveled = useStore((state) => state.setMaxDistanceTraveled)
     const cameraControlMethod = useStore((state) => state.cameraControlMethod);
+    const debug = useStore(state => state.debug);
 
     const setPlayerDisabled = useGameStore((state) => state.setPlayerDisabled)
 
@@ -348,7 +349,7 @@ function PlayerBase(props) {
     return (
         <group>
 
-            <mesh
+            {debug && <mesh
                 ref={ref}
                 // {...props}
                 // position={position}
@@ -356,7 +357,7 @@ function PlayerBase(props) {
             >
                 <sphereGeometry args={[0.5, 32, 32]} />
     
-            </mesh>
+            </mesh>}
 
             <group ref={playerModelRef}>
                 <ModelKingMen

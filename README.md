@@ -1,6 +1,6 @@
 # Jungle Vines
 
-...
+Swing vine to vine and complete the course in classic mode or see how far you can get in the endless mode.
 
 ![Preview](public/img/preview.webp)
 

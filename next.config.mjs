@@ -1,10 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // TODO: Swap when Next 16
-    // reactCompiler: true,
-    experimental: {
-        reactCompiler: true,
-    },
+    reactCompiler: true,
     poweredByHeader: false,
     images: {
         // domains: ['cdn.articles.media', 'articles-website.s3.amazonaws.com', 'd3bzp9rk94ifwy.cloudfront.net'],
@@ -22,6 +18,19 @@ const nextConfig = {
                 // pathname: '',
             },
         ],
+    },
+    async headers() {
+        return [
+            {
+                source: '/(.*)',
+                headers: [
+                    {
+                        key: 'X-Frame-Options',
+                        value: 'SAMEORIGIN',
+                    },
+                ],
+            },
+        ];
     },
 };
 

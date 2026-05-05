@@ -5,9 +5,9 @@
     display: flex;
 
     &.fullscreen {
-        .mobile-menu {
-            top: 0px;
-        }
+        // .mobile-menu {
+        //     top: 0px;
+        // }
     }
 
     .background {
@@ -30,39 +30,39 @@
         z-index: 1;
     }
 
-    .menu-bar {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 50px;
-        z-index: 3;
+    // .menu-bar {
+    //     position: fixed;
+    //     bottom: 0;
+    //     left: 0;
+    //     width: 100%;
+    //     height: 50px;
+    //     z-index: 3;
 
-        @include media-breakpoint-up(lg) {
-            display: none;
-        }
-    }
+    //     @include media-breakpoint-up(lg) {
+    //         display: none;
+    //     }
+    // }
 
-    .mobile-menu {
-        position: fixed;
-        bottom: 50px;
-        left: 0;
-        width: 100%;
-        top: 50px;
-        // height: calc(100vh - 50px);
-        z-index: 2;
-        background-color: rgba(0, 0, 0, 0.75);
-        transform: translateY(calc(100% + 50px));
-        transition-duration: 200ms;
-        padding: 1rem;
-        display: flex;
-        align-items: flex-end;
+    // .mobile-menu {
+    //     position: fixed;
+    //     bottom: 50px;
+    //     left: 0;
+    //     width: 100%;
+    //     top: 50px;
+    //     // height: calc(100vh - 50px);
+    //     z-index: 2;
+    //     background-color: rgba(0, 0, 0, 0.75);
+    //     transform: translateY(calc(100% + 50px));
+    //     transition-duration: 200ms;
+    //     padding: 1rem;
+    //     display: flex;
+    //     align-items: flex-end;
 
-        &.show {
-            transform: translateY(0);
-        }
+    //     &.show {
+    //         transform: translateY(0);
+    //     }
 
-    }
+    // }
 
     .touch-controls-area {
         position: fixed;
@@ -131,17 +131,17 @@
         // padding: 1rem;
     }
 
-    .panel-left, .panel-right {        
-        width: 300px;
-        height: calc(100vh - 0px);
-        flex-shrink: 0;
-    }
+    // .panel-left, .panel-right {        
+    //     width: 300px;
+    //     height: calc(100vh - 0px);
+    //     flex-shrink: 0;
+    // }
 
-    .panel-right {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
+    // .panel-right {
+    //     display: flex;
+    //     justify-content: center;
+    //     align-items: center;
+    // }
 
     .game-panel {
         width: 100%;

@@ -31,6 +31,9 @@ import ScoreCard from '@/components/UI/ScoreCard';
 
 import GameScoreboard from '@articles-media/articles-dev-box/GameScoreboard';
 import Ad from '@articles-media/articles-dev-box/Ad';
+import GameMenuPrimaryButtonGroup from '@articles-media/articles-dev-box/GameMenuPrimaryButtonGroup';
+import NicknameInput from '@articles-media/articles-dev-box/NicknameInput';
+import SessionButton from '@articles-media/articles-dev-box/SessionButton';
 
 import useUserDetails from '@articles-media/articles-dev-box/useUserDetails';
 import useUserToken from '@articles-media/articles-dev-box/useUserToken';
@@ -232,10 +235,9 @@ export default function LobbyPage() {
 
             <div className='background-wrap'>
                 <Image
-                    src={`${process.env.NEXT_PUBLIC_CDN}games/Jungle Vines/jungle-vines-thumbnail.webp`}
+                    src={`/img/background.webp`}
                     alt=""
                     fill
-                    style={{ objectFit: 'cover', objectPosition: 'center', filter: 'blur(10px)' }}
                 />
             </div>
 
@@ -284,37 +286,10 @@ export default function LobbyPage() {
 
                         <div className='card-header d-flex align-items-center'>
 
-                            <div className="flex-grow-1">
+                            <NicknameInput
+                                useStore={useStore}
+                            />
 
-                                <div className="form-group articles mb-0">
-                                    <label htmlFor="nickname">Nickname</label>
-                                    {/* <SingleInput
-                                            value={nickname}
-                                            setValue={setNickname}
-                                            noMargin
-                                        /> */}
-                                    <div className='d-flex'>
-                                        <input
-                                            type="text"
-                                            id="nickname"
-                                            value={nickname}
-                                            onChange={(e) => setNickname(e.target.value)}
-                                            className="form-control"
-                                            placeholder="Enter your nickname"
-                                        />
-                                        <ArticlesButton
-                                            className=''
-                                            small
-                                            onClick={setRandomNickname}
-                                        >
-                                            <i className="fad fa-redo"></i>
-                                        </ArticlesButton>
-                                    </div>
-                                </div>
-
-                                <div className='mt-1' style={{ fontSize: '0.8rem' }}>Visible to all players</div>
-
-                            </div>
                         </div>
 
                         <div className="card-body">
@@ -418,76 +393,22 @@ export default function LobbyPage() {
 
                         <div className="card-footer d-flex flex-wrap justify-content-center">
 
-                            <ArticlesButton
-                                className={`w-50`}
-                                small
-                                onClick={() => {
-                                    setShowSettingsModal(prev => !prev)
-                                }}
-                            >
-                                <i className="fad fa-cog"></i>
-                                Settings
-                            </ArticlesButton>
-
-                            <ArticlesButton
-                                className={`w-50`}
-                                small
-                                onClick={() => {
-                                    setShowInfoModal(true)
-                                }}
-                            >
-                                <i className="fad fa-info-square"></i>
-                                Rules & Controls
-                            </ArticlesButton>
-
-                            {/* <Link href={'/'} className='w-50'>
-                                <ArticlesButton
-                                    className={`w-100`}
-                                    small
-                                    onClick={() => {
-    
-                                    }}
-                                >
-                                    <i className="fad fa-sign-out fa-rotate-180"></i>
-                                    Leave Game
-                                </ArticlesButton>
-                            </Link> */}
-
-                            <Link
-                                href={'https://github.com/Articles-Joey/jungle-vines'}
-                                className='w-50'
-                                target='_blank'
-                                rel="noopener noreferrer"
-                                prefetch={false}
-                            >
-                                <ArticlesButton
-                                    className={`w-100`}
-                                    small
-                                    onClick={() => {
-
-                                    }}
-                                >
-                                    <i className="fab fa-github"></i>
-                                    Github
-                                </ArticlesButton>
-                            </Link>
-
-                            <ArticlesButton
-                                className={`w-50`}
-                                small
-                                onClick={() => {
-                                    setShowCreditsModal(true)
-                                }}
-                            >
-                                <i className="fad fa-users"></i>
-                                Credits
-                            </ArticlesButton>
+                            <GameMenuPrimaryButtonGroup
+                                useStore={useStore}
+                                type="Landing"
+                            />
 
                         </div>
 
                     </div>
 
+                    <SessionButton
+                        port={process.env.NEXT_PUBLIC_GAME_PORT}
+                        friendsButton={true}
+                    />
+
                     <ReturnToLauncherButton />
+
                 </div>
 
                 {/* <GameScoreboard game="Death Race" /> */}

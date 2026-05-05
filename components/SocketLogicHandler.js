@@ -10,7 +10,7 @@ import { useRouter, usePathname } from 'next/navigation';
 
 // import { format } from 'date-fns'
 
-import axios from "axios";
+// import axios from "axios";
 
 import { useSocketStore } from "@/hooks/useSocketStore";
 
@@ -84,7 +84,7 @@ export default function SocketLogicHandler(props) {
         // Makes sure connect is only called once during reactStrictMode
         if (!initialized.current) {
             initialized.current = true
-            // connectSocket()
+            connectSocket()
         }
 
         // if (!socket.connected) return
@@ -221,23 +221,23 @@ export default function SocketLogicHandler(props) {
 
             // return
 
-            axios.get('/api/user/sockets/login', {
-                params: {
-                    socket: socket.id
-                }
-            })
-                .then((response) => {
-                    console.log("[📶Socket] socket-login Success")
-                    console.log(response.data)
-                    // setSocketData(prevState => ({
-                    //     ...prevState,
-                    //     authenticated: true
-                    // }))
-                })
-                .catch(function (error) {
-                    console.log("[📶Socket] socket-login Error")
-                    console.log(error);
-                });
+            // axios.get('/api/user/sockets/login', {
+            //     params: {
+            //         socket: socket.id
+            //     }
+            // })
+            //     .then((response) => {
+            //         console.log("[📶Socket] socket-login Success")
+            //         console.log(response.data)
+            //         // setSocketData(prevState => ({
+            //         //     ...prevState,
+            //         //     authenticated: true
+            //         // }))
+            //     })
+            //     .catch(function (error) {
+            //         console.log("[📶Socket] socket-login Error")
+            //         console.log(error);
+            //     });
 
             // socket.emit('login', { userId: userReduxState?._id, session: session })
             // setSocketLoggedIn(true);

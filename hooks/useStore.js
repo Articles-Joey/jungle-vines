@@ -2,9 +2,15 @@ import generateWeeklyMapSeed from '@/util/generateWeeklyMapSeed';
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 
+import typicalZustandStoreExcludes from '@articles-media/articles-dev-box/typicalZustandStoreExcludes';
+import typicalZustandStoreStateSlice from '@articles-media/articles-dev-box/typicalZustandStoreStateSlice';
+import generateRandomNickname from '@/util/generateRandomNickname';
+
 export const useStore = create()(
   persist(
     (set, get) => ({
+
+      ...typicalZustandStoreStateSlice(set, get, generateRandomNickname),
 
       _hasHydrated: false,
       setHasHydrated: (state) => {
@@ -13,12 +19,12 @@ export const useStore = create()(
         });
       },
 
-      darkMode: null,
-      toggleDarkMode: () => set({ darkMode: !get().darkMode }),
-      setDarkMode: (newValue) => set({ darkMode: newValue }),
+      // darkMode: null,
+      // toggleDarkMode: () => set({ darkMode: !get().darkMode }),
+      // setDarkMode: (newValue) => set({ darkMode: newValue }),
 
-      debugMode: false,
-      setDebugMode: (newValue) => set({ debugMode: newValue }),
+      // debugMode: false,
+      // setDebugMode: (newValue) => set({ debugMode: newValue }),
 
       seed: '3',
       // TOODO: Uncomment this to use the weekly seed or conditionally set it based on arcadeMode
@@ -29,22 +35,22 @@ export const useStore = create()(
       cameraControlMethod: 'Side Scroll',
       setCameraControlMethod: (newValue) => set({ cameraControlMethod: newValue }),
 
-      nickname: '',
-      setNickname: (newValue) => set({ nickname: newValue }),
+      // nickname: '',
+      // setNickname: (newValue) => set({ nickname: newValue }),
 
       lastDistanceTraveled: 0,
       setLastDistanceTraveled: (newValue) => set({ lastDistanceTraveled: newValue }),
       maxDistanceTraveled: 0,
       setMaxDistanceTraveled: (newValue) => set({ maxDistanceTraveled: newValue }),
 
-      showSettingsModal: false,
-      setShowSettingsModal: (newValue) => set({ showSettingsModal: newValue }),
+      // showSettingsModal: false,
+      // setShowSettingsModal: (newValue) => set({ showSettingsModal: newValue }),
 
-      showInfoModal: false,
-      setShowInfoModal: (newValue) => set({ showInfoModal: newValue }),
+      // showInfoModal: false,
+      // setShowInfoModal: (newValue) => set({ showInfoModal: newValue }),
 
-      showCreditsModal: false,
-      setShowCreditsModal: (newValue) => set({ showCreditsModal: newValue }),
+      // showCreditsModal: false,
+      // setShowCreditsModal: (newValue) => set({ showCreditsModal: newValue }),
 
       audioSettings: {
         enabled: true,
@@ -57,16 +63,18 @@ export const useStore = create()(
 
     }),
     {
-      name: 'jungle-vines-store', // name of the item in the storage (must be unique)
+      name: `${process.env.NEXT_PUBLIC_GAME_KEY}-store`,
       version: 4,
-      // storage: createJSONStorage(() => sessionStorage), // (optional) by default, 'localStorage' is used
+      onRehydrateStorage: (state) => {
+        return () => state.setHasHydrated(true)
+      },
       partialize: (state) =>
         Object.fromEntries(
-          Object.entries(state).filter(([key]) => !['showSettingsModal', 'seed'].includes(key)),
+          Object.entries(state).filter(([key]) => ![
+            ...typicalZustandStoreExcludes,
+            // 'seed',
+          ].includes(key))
         ),
-      onRehydrateStorage: () => (state) => {
-        state.setHasHydrated(true)
-      },
     },
   ),
 )

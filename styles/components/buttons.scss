@@ -6,7 +6,7 @@
 [data-theme='Dark'], [data-bs-theme='dark'] {
     .btn-articles {
         background-color: var(--articles-secondary-color);
-        background-color: rgb(70, 70, 70);
+        background-color: #524219;
         color: white;
         border-left-color: rgb(29, 29, 29);
         border-right-color: rgb(29, 29, 29);
@@ -18,7 +18,8 @@
         }
 
         &.active {
-            color: black;
+            background-color: #31280f;
+            color: #fff;
         }
     }
 
@@ -83,7 +84,7 @@
 
 .btn-articles {
     color: #212529;
-    background-color: #fff;
+    background-color: #9f8132;
     border-color: #ced4da;
     border-bottom: 3px solid var(--articles-secondary-color);
 
@@ -114,7 +115,7 @@
     &:active,
     &.active {
         // background-color: var(--articles-primary-color);
-        background-color: var(--articles-secondary-color);
+        background-color: #524219;
         border-bottom: 3px solid #000 !important;
     }
 

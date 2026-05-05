@@ -22,7 +22,7 @@ export default function ScoreCard({ score }) {
 
             <div className='card-header flex-header'>
 
-                <div>High Score</div>
+                <div className="">High Score</div>
 
                 <ArticlesButton
                     className=''
@@ -38,7 +38,9 @@ export default function ScoreCard({ score }) {
 
             <div className="card-body">
 
-                {maxDistanceTraveled}
+                <h1 className="stick-regular mb-0">
+                    {maxDistanceTraveled.toFixed(0)}m
+                </h1>
 
             </div>
 

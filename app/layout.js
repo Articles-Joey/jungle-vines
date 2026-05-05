@@ -12,9 +12,13 @@ import "@/styles/index.scss";
 
 import "@articles-media/articles-dev-box/dist/style.css";
 
+import "@articles-media/articles-dev-box/dist/style.css";
+
+import "@articles-media/articles-gamepad-helper/dist/articles-gamepad-helper.css";
+
 import SocketLogicHandler from "@/components/SocketLogicHandler";
 import { Suspense } from 'react';
-import DarkModeHandler from '@/components/UI/DarkModeHandler';
+// import DarkModeHandler from '@/components/UI/DarkModeHandler';
 import ClientModals from '@/components/UI/ClientModals';
 import AudioHandler from '@/components/AudioHandler';
 import LayoutClient from './layout-client';
@@ -55,11 +59,11 @@ export default function RootLayout({ children }) {
       // className={`${geistSans.variable} ${geistMono.variable}`}
       >
 
-        <Suspense>
-          <SocketLogicHandler />
+        <SocketLogicHandler />
+
+        <Suspense>          
           <AudioHandler />
           <ClientModals />
-          <DarkModeHandler />
           <LayoutClient />
         </Suspense>
 

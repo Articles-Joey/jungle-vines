@@ -1,5 +1,15 @@
 @use "@/styles/components/global.scss" as *;
 
+[data-bs-theme="dark"] {
+    .jungle-vines-landing-page {
+        .background-wrap {
+            img {
+                filter: blur(5px) brightness(0.5) !important;
+            }
+        }
+    }
+}
+
 .jungle-vines-landing-page {
     flex-grow: 1;
     display: flex;
@@ -11,9 +21,10 @@
         .hero-title {
             font-size: 3rem;
             text-align: center;
-            color: #fff;
+            color: #c0c554;
             text-shadow: 1px 4px 5px rgb(84, 126, 7);
             margin-bottom: 1rem;
+            -webkit-text-stroke: 2px black;
         }
     }
 
@@ -56,7 +67,9 @@
 
         img {
             // backdrop-filter: blur(8px);
-            filter: blur(2px);
+            filter: blur(5px);
+            transform: scale(1.05);
+            object-fit: cover;
         }
     }
 
