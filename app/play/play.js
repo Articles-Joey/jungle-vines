@@ -2,23 +2,11 @@
 import { useEffect, useContext, useState, useRef, useMemo } from 'react';
 
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import Link from 'next/link';
 import dynamic from 'next/dynamic'
-import Script from 'next/script'
 
-// import { useSelector, useDispatch } from 'react-redux'
 
-// import ROUTES from '@/components/constants/routes';
+import useFullscreen from '@articles-media/articles-dev-box/useFullscreen';
 
-import ArticlesButton from '@/components/UI/Button';
-
-import useFullscreen from '@/hooks/useFullScreen';
-import { useControllerStore } from '@/hooks/useControllerStore';
-// import ControllerPreview from '@/components/Games/ControllerPreview';
-// import { useGameStore } from '@/components/Games/Ocean Rings/hooks/useGameStore';
-// import { Dropdown, DropdownButton } from 'react-bootstrap';
-// import TouchControls from 'app/(site)/community/games/glass-ceiling/components/UI/TouchControls';
-import { useLocalStorageNew } from '@/hooks/useLocalStorageNew';
 import LeftPanelContent from '@/components/Game/LeftPanel';
 import { useSocketStore } from '@/hooks/useSocketStore';
 import { useGameStore } from '@/hooks/useGameStore';
@@ -42,15 +30,15 @@ export default function GamePage() {
         connected: state.connected
     }));
 
-    const router = useRouter()
-    const pathname = usePathname()
+    // const router = useRouter()
+    // const pathname = usePathname()
     const searchParams = useSearchParams()
     const params = Object.fromEntries(searchParams.entries());
     const { server } = params
 
     // const showMenu = useStore(state => state.showMenu)
     const sceneKey = useStore(state => state.sceneKey)
-    const menuOpen = useStore(state => state.menuOpen)
+    const showMenu = useStore(state => state.showMenu)
     const sidebar = useStore(state => state.sidebar)
     const nickname = useStore(state => state.nickname)
     const reloadScene = useStore(state => state.reloadScene)
@@ -107,7 +95,7 @@ export default function GamePage() {
             className={classNames(
                 `${process.env.NEXT_PUBLIC_GAME_KEY}-game-page`,
                 {
-                    'menu-open': menuOpen,
+                    'menu-open': showMenu,
                     'fullscreen': useFullscreen().isFullscreen,
                     'show-sidebar': sidebar,
                 }
