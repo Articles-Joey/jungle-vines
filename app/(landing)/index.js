@@ -1,7 +1,6 @@
 "use client"
 import { useEffect, useContext, useState, Suspense } from 'react';
 
-import Image from 'next/image'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 
@@ -11,93 +10,35 @@ import { useSocketStore } from '@/hooks/useSocketStore';
 import { useStore } from '@/hooks/useStore';
 import ScoreCard from '@/components/UI/ScoreCard';
 
-import GameMenuPrimaryButtonGroup from '@articles-media/articles-dev-box/GameMenuPrimaryButtonGroup';
-import NicknameInput from '@articles-media/articles-dev-box/NicknameInput';
-import SessionButton from '@articles-media/articles-dev-box/SessionButton';
-
-import useUserDetails from '@articles-media/articles-dev-box/useUserDetails';
-import useUserToken from '@articles-media/articles-dev-box/useUserToken';
 import { PieMenu } from '@articles-media/articles-gamepad-helper';
+import PageTemplateLandingPage from '@articles-media/articles-dev-box/PageTemplateLandingPage';
 
-const Ad = dynamic(() =>
-    import('@articles-media/articles-dev-box/Ad'),
-    { ssr: false }
-);
-const GameScoreboard = dynamic(() =>
-    import('@articles-media/articles-dev-box/GameScoreboard'),
-    { ssr: false }
-);
-const ReturnToLauncherButton = dynamic(() =>
-    import('@articles-media/articles-dev-box/ReturnToLauncherButton'),
-    { ssr: false }
+// const backgroundImage = `img/preview.webp`;
+const LandingBackgroundAnimation = dynamic(() =>
+    import('@/components/Game/LandingBackgroundAnimation'),
+    {
+        ssr: false,
+        // loading: () => <img
+        //     src={backgroundImage.src}
+        //     alt=""
+        //     // fill
+        //     style={{ objectFit: 'cover', objectPosition: 'center', filter: 'blur(10px)' }}
+        // />
+    }
 );
 
 export default function LobbyPage() {
 
-    const {
-        socket,
-    } = useSocketStore(state => ({
-        socket: state.socket,
-    }));
-
-    const {
-        data: userToken,
-        error: userTokenError,
-        isLoading: userTokenLoading,
-        mutate: userTokenMutate
-    } = useUserToken(
-        process.env.NEXT_PUBLIC_GAME_PORT
-    );
-
-    const {
-        data: userDetails,
-        error: userDetailsError,
-        isLoading: userDetailsLoading,
-        mutate: userDetailsMutate
-    } = useUserDetails({
-        token: userToken
-    });
-
     const darkMode = useStore((state) => state.darkMode)
+    const toontownMode = useStore(state => state.toontownMode);
+
     const maxDistanceTraveled = useStore((state) => state.maxDistanceTraveled);
 
     const setShowSettingsModal = useStore((state) => state.setShowSettingsModal);
     const setShowCreditsModal = useStore((state) => state.setShowCreditsModal);
 
-    const lobbyDetails = useStore((state) => state.lobbyDetails);
-
-    useEffect(() => {
-
-        socket.on('game:jungle-vines-landing-details', function (msg) {
-            console.log('game:jungle-vines-landing-details', msg)
-
-            if (JSON.stringify(msg) !== JSON.stringify(lobbyDetails)) {
-                setLobbyDetails(msg)
-            }
-        });
-
-        return () => {
-            socket.off('game:jungle-vines-landing-details');
-        };
-
-    }, [])
-
-    useEffect(() => {
-
-        if (socket.connected) {
-            socket.emit('join-room', 'game:jungle-vines-landing');
-        }
-
-        return function cleanup() {
-            socket.emit('leave-room', 'game:jungle-vines-landing')
-        };
-
-    }, [socket.connected]);
-
     return (
-
-        <div className="jungle-vines-landing-page">
-
+        <>
             <Suspense>
                 <PieMenu
                     options={[
@@ -138,28 +79,16 @@ export default function LobbyPage() {
                     }}
                 />
             </Suspense>
-
-            {/* {showPrivateGameModal &&
-                <PrivateGameModal
-                    show={showPrivateGameModal}
-                    setShow={setShowPrivateGameModal}
-                />
-            } */}
-
-            <div className='background-wrap'>
-                <Image
-                    src={`/img/background.webp`}
-                    alt=""
-                    fill
-                />
-            </div>
-
-            <div className="container d-flex flex-column justify-content-center align-items-center py-3">
-
-                <div
-                    style={{ "width": "20rem" }}
-                >
-
+            <PageTemplateLandingPage
+                useSocketStore={useSocketStore}
+                useStore={useStore}
+                // RotatingMascot={RotatingMascot}
+                Link={Link}
+                logoImage={`img/icon.png`}
+                LandingBackgroundAnimation={
+                    <LandingBackgroundAnimation />
+                }
+                heroOverride={<>
                     <div className='hero'>
 
                         <div
@@ -173,174 +102,56 @@ export default function LobbyPage() {
                         </div>
 
                     </div>
-
-                    {maxDistanceTraveled ?
-                        <div
-                            className='mb-3'
-                        >
-                            <ScoreCard />
-                        </div>
-                        :
-                        null
-                    }
-
-                    <div
-                        className="card card-articles card-sm mb-3"
-                    >
-
-                        {/* <div style={{ position: 'relative', height: '200px' }}>
-                            <Image
-                                src={Logo}
-                                alt=""
-                                fill
-                                style={{ objectFit: 'cover' }}
-                            />
-                        </div> */}
-
-                        <div className='card-header d-flex align-items-center'>
-
-                            <NicknameInput
-                                useStore={useStore}
-                            />
-
-                        </div>
-
-                        <div className="card-body">
-
-                            <Link
-                                prefetch={false}
-                                href={{
-                                    pathname: `/play`
-                                }}
-                                className=''
+                </>}
+                PostHeroContent={
+                    <>
+                        {maxDistanceTraveled ?
+                            <div
+                                className='mb-3'
                             >
-                                <ArticlesButton
-                                    className={`w-100 mb-2`}
-                                // small
-                                >
-                                    <i className="fas fa-play me-2"></i>
-                                    Play Single Player
-                                </ArticlesButton>
-                            </Link>
-
-                            <ArticlesButton
-                                className={`w-100`}
-                                // small
-                                disabled
-                            >
-                                <i className="fas fa-users me-2"></i>
-                                Multiplayer Coming Soon!
-                            </ArticlesButton>
-
-                            <div className='d-none mt-3'>
-                                <div className="fw-bold mb-1 small text-center">
-                                    {lobbyDetails.players.length || 0} player{lobbyDetails.players.length > 1 && 's'} in the lobby.
-                                </div>
-
-                                <div className="servers">
-
-                                    {[1, 2, 3, 4].map(id => {
-
-                                        let lobbyLookup = lobbyDetails?.fourFrogsGlobalState?.games?.find(lobby =>
-                                            parseInt(lobby.server_id) == id
-                                        )
-
-                                        return (
-                                            <div key={id} className="server">
-
-                                                <div className='d-flex justify-content-between align-items-center w-100 mb-2'>
-                                                    <div className="mb-0" style={{ fontSize: '0.9rem' }}><b>Server {id}</b></div>
-                                                    <div className='mb-0'>{lobbyLookup?.players?.length || 0}/4</div>
-                                                </div>
-
-                                                <div className='d-flex justify-content-around w-100 mb-1'>
-                                                    {[1, 2, 3, 4].map(player_count => {
-
-                                                        let playerLookup = false
-
-                                                        if (lobbyLookup?.players?.length >= player_count) playerLookup = true
-
-                                                        return (
-                                                            <div key={player_count} className="icon" style={{
-                                                                width: '20px',
-                                                                height: '20px',
-                                                                ...(playerLookup ? {
-                                                                    backgroundColor: 'black',
-                                                                } : {
-                                                                    backgroundColor: 'gray',
-                                                                }),
-                                                                border: '1px solid black'
-                                                            }}>
-
-                                                            </div>
-                                                        )
-                                                    })}
-                                                </div>
-
-                                                <Link
-                                                    className={``}
-                                                    prefetch={false}
-                                                    href={{
-                                                        pathname: `/play`,
-                                                        query: {
-                                                            server: id
-                                                        }
-                                                    }}
-                                                >
-                                                    <ArticlesButton
-                                                        className="px-5"
-                                                        small
-                                                    >
-                                                        Join
-                                                    </ArticlesButton>
-                                                </Link>
-
-                                            </div>
-                                        )
-                                    })}
-
-                                </div>
+                                <ScoreCard />
                             </div>
-
-                        </div>
-
-                        <div className="card-footer d-flex flex-wrap justify-content-center">
-
-                            <GameMenuPrimaryButtonGroup
-                                useStore={useStore}
-                                type="Landing"
+                            :
+                            null
+                        }
+                    </>
+                }
+                NicknameInputConfig={{
+                    PreComponent:
+                        <>
+                            <img
+                                className='panel-bg me-2'
+                                src="img/icon.png"
+                                width={70}
+                                height={70}
                             />
+                        </>
+                }}
+                backgroundImage={
+                    toontownMode ?
+                        darkMode ?
+                            `/img/background.webp`
+                            :
+                            `/img/background.webp`
+                        :
+                        darkMode ?
+                            `/img/background.webp`
+                            :
+                            `/img/background.webp`
+                }
+                singlePlayerConfig={{
 
-                        </div>
-
-                    </div>
-
-                    <SessionButton
-                        port={process.env.NEXT_PUBLIC_GAME_PORT}
-                        friendsButton={true}
-                    />
-
-                    <ReturnToLauncherButton />
-
-                </div>
-
-                <GameScoreboard
-                    game={process.env.NEXT_PUBLIC_GAME_NAME}
-                    style="Default"
-                    darkMode={darkMode ? true : false}
-                />
-
-                <Ad
-                    style="Default"
-                    section={"Games"}
-                    section_id={process.env.NEXT_PUBLIC_GAME_NAME}
-                    darkMode={darkMode ? true : false}
-                    user_ad_token={userToken}
-                    userDetails={userDetails}
-                    userDetailsLoading={userDetailsLoading}
-                />
-
-            </div>
-        </div>
+                }}
+                multiplayerConfig={{
+                    type: "WebSocket",
+                    comingSoon: true,
+                    defaultServers: 2,
+                    privateServerSupport: false,
+                    onlinePlayersTemplate: "2.0",
+                }}
+            // brandingTextClass="jaro-primary"
+            // disableGameScoreboard={true}
+            />
+        </>
     );
 }

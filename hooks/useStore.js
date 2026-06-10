@@ -12,12 +12,12 @@ export const useStore = create()(
 
       ...typicalZustandStoreStateSlice(set, get, generateRandomNickname),
 
-      _hasHydrated: false,
-      setHasHydrated: (state) => {
-        set({
-          _hasHydrated: state
-        });
-      },
+      // _hasHydrated: false,
+      // setHasHydrated: (state) => {
+      //   set({
+      //     _hasHydrated: state
+      //   });
+      // },
 
       // darkMode: null,
       // toggleDarkMode: () => set({ darkMode: !get().darkMode }),
@@ -52,14 +52,14 @@ export const useStore = create()(
       // showCreditsModal: false,
       // setShowCreditsModal: (newValue) => set({ showCreditsModal: newValue }),
 
-      audioSettings: {
-        enabled: true,
-        backgroundMusicVolume: 50,
-        soundEffectsVolume: 50,
-      },
-      setAudioSettings: (newValue) => set({ audioSettings: newValue }),
-      audioMuted: false,
-      setAudioMuted: (newValue) => set({ audioMuted: newValue }),
+      // audioSettings: {
+      //   enabled: true,
+      //   backgroundMusicVolume: 50,
+      //   soundEffectsVolume: 50,
+      // },
+      // setAudioSettings: (newValue) => set({ audioSettings: newValue }),
+      // audioMuted: false,
+      // setAudioMuted: (newValue) => set({ audioMuted: newValue }),
 
     }),
     {

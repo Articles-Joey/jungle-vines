@@ -1,48 +1,17 @@
 import Link from "next/link";
 
-// import ROUTES from '@/components/constants/routes';
-// import { useGameStore } from "../hooks/useGameStore";
 import ArticlesButton from "@/components/UI/Button";
-
-// import ControllerPreview from "../../ControllerPreview";
 
 import { useSocketStore } from "@/hooks/useSocketStore";
 import { useStore } from "@/hooks/useStore";
 import ScoreCard from "../UI/ScoreCard";
 import { Dropdown } from "react-bootstrap";
-// import { useIceSlideStore } from "./hooks/useIceSlideStore";
-// import { useEffect, useRef } from "react";
-// import { useHotkeys } from "react-hotkeys-hook";
 
 import GameMenuPrimaryButtonGroup from '@articles-media/articles-dev-box/GameMenuPrimaryButtonGroup';
 import DebugPanel from "../UI/DebugPanel";
+import { useRouter } from "next/navigation";
 
 export default function LeftPanelContent(props) {
-
-    const {
-        server,
-        // players,
-        touchControlsEnabled,
-        setTouchControlsEnabled,
-        reloadScene,
-        controllerState,
-        isFullscreen,
-        requestFullscreen,
-        exitFullscreen,
-        setShowMenu
-    } = props;
-
-    // const {
-    //     hitRotation,
-    //     setHitRotation,
-    //     hitPower,
-    //     setHitPower
-    // } = useIceSlideStore(state => ({
-    //     hitRotation: state.hitRotation,
-    //     setHitRotation: state.setHitRotation,
-    //     hitPower: state.hitPower,
-    //     setHitPower: state.setHitPower,
-    // }));
 
     const {
         socket,
@@ -68,6 +37,7 @@ export default function LeftPanelContent(props) {
                         <GameMenuPrimaryButtonGroup
                             useStore={useStore}
                             type="GameMenu"
+                            useRouter={useRouter}
                         />
                     </div>
 
@@ -210,42 +180,6 @@ export default function LeftPanelContent(props) {
 
             {/* Debug Controls */}
             {debug && <DebugPanel />}
-
-            {controllerState?.connected &&
-                <div className="panel-content-group p-0 text-dark">
-
-                    <div className="p-1 border-bottom border-dark">
-                        <div className="fw-bold" style={{ fontSize: '0.7rem' }}>
-                            {controllerState?.id}
-                        </div>
-                    </div>
-
-                    <div className='p-1'>
-                        <ArticlesButton
-                            small
-                            className="w-100"
-                            active={showControllerState}
-                            onClick={() => {
-                                setShowControllerState(prev => !prev)
-                            }}
-                        >
-                            {showControllerState ? 'Hide' : 'Show'} Controller Preview
-                        </ArticlesButton>
-                    </div>
-
-                    {/* {showControllerState && <div className='p-3'>
-
-                        <ControllerPreview
-                            controllerState={controllerState}
-                            showJSON={true}
-                            showVibrationControls={true}
-                            maxHeight={300}
-                            showPreview={true}
-                        />
-                    </div>} */}
-
-                </div>
-            }
 
         </div>
     )

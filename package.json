@@ -1,6 +1,7 @@
 {
   "name": "jungle-vines",
-  "version": "0.1.0",
+  "description": "Swing vine to vine and complete the course in classic mode or see how far you can get in the endless mode.",
+  "version": "0.2.0",
   "private": false,
   "homepage": "https://jungle-vines.articles.media",
   "scripts": {
@@ -10,7 +11,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@articles-media/articles-dev-box": "^1.0.42",
+    "@articles-media/articles-dev-box": "^1.5.1",
     "@articles-media/articles-gamepad-helper": "^0.0.13",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",

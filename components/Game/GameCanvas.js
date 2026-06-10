@@ -3,30 +3,24 @@ import { createContext, createRef, forwardRef, memo, useContext, useEffect, useL
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Sky, useDetectGPU, useTexture, OrbitControls, Cylinder, QuadraticBezierLine, Text, Image } from "@react-three/drei";
 
-import { NearestFilter, RepeatWrapping, TextureLoader, Vector3 } from "three";
-
 import { Debug, Physics, useBox, useCylinder, useSphere } from "@react-three/cannon";
-import { degToRad } from "three/src/math/MathUtils";
 
-// import { Model as ModelKingMen } from "@/components/Games/Assets/Quaternius/men/King";
 import Player from "./Player";
 import WaterPlane from "./WaterPlane";
-import { ModelQuaterniusFishingPiranha } from "@/components/Models/Piranha";
-import { ModelQuaterniusFishingShark } from "@/components/Models/Shark";
+
 import FlyingEnemy from "./FlyingEnemy";
 import RopeSwing from "./RopeSwing";
 import Platform from "./Platform";
 import MovingPlatform from "./MovingPlatform";
-import { ModelFly } from "../Models/Fly";
-import { ModelSpider } from "../Models/Spider";
+
 import BobbingSharkField from "./BobbingSharkField";
 import ProcedurallyGeneratedMapElements from "./ProcedurallyGeneratedMapElements";
 import { useStore } from "@/hooks/useStore";
 import BobbingCrocodileField from "./BobbingCrocodileField";
 
-function GameCanvas(props) {
-
-    const [[a, b, c, d, e]] = useState(() => [...Array(5)].map(createRef))
+function GameCanvas({
+    landingAnimationMode = false
+}) {
 
     const debug = useStore(state => state.debug);
     const showStats = useStore(state => state.showStats);
@@ -49,7 +43,7 @@ function GameCanvas(props) {
                     <ambientLight intensity={3} />
                     <Sky
                         sunPosition={[0, -10, 0]}
-                        // intensity={0.1}
+                    // intensity={0.1}
                     />
                 </>
                 :
@@ -155,12 +149,13 @@ function GameCanvas(props) {
                         startPosition={[3, 10, 0]}
                     />
 
-                    <MovingPlatform
+                    {/* Needs rapier, hard with cannon */}
+                    {/* <MovingPlatform
                         position={[-20, 5, 0]}
                         args={[5, 1, 5]}
                         range={5}
                         speed={1}
-                    />
+                    /> */}
 
                     <Platform
                         position={[-10, -1, 0]}
@@ -174,7 +169,9 @@ function GameCanvas(props) {
                         color={"green"}
                     />
 
-                    <Player />
+                    {!landingAnimationMode &&
+                        <Player />
+                    }
 
                     {/* <ModelKingMen
                     scale={3}

@@ -16,22 +16,10 @@ import "@articles-media/articles-dev-box/dist/style.css";
 
 import "@articles-media/articles-gamepad-helper/dist/articles-gamepad-helper.css";
 
-import SocketLogicHandler from "@/components/SocketLogicHandler";
+import SocketLogicHandler from "@/components/Handlers/SocketLogicHandler";
 import { Suspense } from 'react';
-// import DarkModeHandler from '@/components/UI/DarkModeHandler';
-import ClientModals from '@/components/UI/ClientModals';
-import AudioHandler from '@/components/AudioHandler';
+import AudioHandler from '@/components/Handlers/AudioHandler';
 import LayoutClient from './layout-client';
-
-// const geistSans = Geist({
-//   variable: "--font-geist-sans",
-//   subsets: ["latin"],
-// });
-
-// const geistMono = Geist_Mono({
-//   variable: "--font-geist-mono",
-//   subsets: ["latin"],
-// });
 
 export const metadata = {
   title: "Jungle Vines",
@@ -44,26 +32,19 @@ export default function RootLayout({ children }) {
 
       <head>
 
-        {/* <link
-          rel="stylesheet"
-          href={`${process.env.NEXT_PUBLIC_CDN}fonts/fontawsome/css/all.min.css`}
-        /> */}
-
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
         <link href="https://fonts.googleapis.com/css2?family=Stick&display=swap" rel="stylesheet" />
 
       </head>
 
       <body
       // className={`${geistSans.variable} ${geistMono.variable}`}
-      >
+      >        
 
-        <SocketLogicHandler />
-
-        <Suspense>          
+        <Suspense>
+          <SocketLogicHandler />
           <AudioHandler />
-          <ClientModals />
           <LayoutClient />
         </Suspense>
 
