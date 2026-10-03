@@ -1,65 +1,35 @@
+"use client";
+
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import ReplayIcon from "@mui/icons-material/Replay";
+import CodeIcon from "@mui/icons-material/Code";
 import { useStore } from "@/hooks/useStore";
-import ArticlesButton from "./Button"
+import ArticlesButton from "./Button";
 
 export default function DebugPanel() {
-
-    const debugMode = useStore(state => state.debug);
-    const setDebugMode = useStore(state => state.setDebug);
-    const reloadScene = useStore(state => state.reloadScene);
+    const debugMode = useStore((state) => state.debug);
+    const setDebugMode = useStore((state) => state.setDebug);
+    const reloadScene = useStore((state) => state.reloadScene);
 
     return (
-        <div
-            className="card card-articles card-sm"
-        >
-            <div className="card-body">
-
-                <div className="small text-muted">Debug Controls</div>
-
-                <div className="small border p-2">
-                    {/* <div>Rotation Angle: {hitRotation}</div> */}
-                    {/* <div>Power: {hitPower}/100</div> */}
-                </div>
-
-                <div className='d-flex flex-column'>
-
-                    <div>
-
-                        <ArticlesButton
-                            size="sm"
-                            className="w-50"
-                            onClick={() => reloadScene()}
-                        >
-                            <i className="fad fa-redo"></i>
-                            Reload Game
-                        </ArticlesButton>
-
-                        <ArticlesButton
-                            size="sm"
-                            className="w-50"
-                            onClick={() => reloadScene()}
-                        >
-                            <i className="fad fa-redo"></i>
-                            Reset Camera
-                        </ArticlesButton>
-
-                        <ArticlesButton
-                            size="sm"
-                            className="w-50"
-                            active={debugMode}
-                            onClick={() => {
-                                setDebugMode(!debugMode)
-                            }}
-                        >
-                            <i className="fad fa-code"></i>
-                            Debug Mode
-                        </ArticlesButton>
-
-                    </div>
-
-                </div>
-
-            </div>
-        </div>
-    )
-
+        <Card sx={{ bgcolor: "game.card", color: "#fff", backgroundImage: "none", fontSize: "0.875rem", border: 1, borderColor: "divider" }}>
+            <CardContent sx={{ p: 1, "&:last-child": { pb: 1 } }}>
+                <Box sx={{ fontSize: "0.875em", opacity: 0.75 }}>Debug Controls</Box>
+                <Box sx={{ fontSize: "0.875em", border: 1, borderColor: "divider", p: "0.5rem" }} />
+                <Box sx={{ display: "flex", flexWrap: "wrap" }}>
+                    <ArticlesButton small sx={{ width: "50%" }} startIcon={<ReplayIcon />} onClick={() => reloadScene()}>
+                        Reload Game
+                    </ArticlesButton>
+                    <ArticlesButton small sx={{ width: "50%" }} startIcon={<ReplayIcon />} onClick={() => reloadScene()}>
+                        Reset Camera
+                    </ArticlesButton>
+                    <ArticlesButton small sx={{ width: "50%" }} startIcon={<CodeIcon />} active={debugMode} onClick={() => setDebugMode(!debugMode)}>
+                        Debug Mode
+                    </ArticlesButton>
+                </Box>
+            </CardContent>
+        </Card>
+    );
 }

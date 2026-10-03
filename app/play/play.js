@@ -1,128 +1,105 @@
-"use client"
-import { useEffect, useContext, useState, useRef, useMemo } from 'react';
+"use client";
 
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import dynamic from 'next/dynamic'
+import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
+import Box from "@mui/material/Box";
+import classNames from "classnames";
+import useFullscreen from "@articles-media/articles-dev-box/useFullscreen";
+import GameMenu from "@articles-media/articles-dev-box/GameMenu";
+import LeftPanelContent from "@/components/Game/LeftPanel";
+import { useSocketStore } from "@/hooks/useSocketStore";
+import { useStore } from "@/hooks/useStore";
 
-
-import useFullscreen from '@articles-media/articles-dev-box/useFullscreen';
-
-import LeftPanelContent from '@/components/Game/LeftPanel';
-import { useSocketStore } from '@/hooks/useSocketStore';
-import { useGameStore } from '@/hooks/useGameStore';
-import { useStore } from '@/hooks/useStore';
-import classNames from 'classnames';
-
-import GameMenu from '@articles-media/articles-dev-box/GameMenu';
-import { useHotkeys } from 'react-hotkeys-hook';
-
-const GameCanvas = dynamic(() => import('@/components/Game/GameCanvas'), {
-    ssr: false,
-});
+const GameCanvas = dynamic(() => import("@/components/Game/GameCanvas"), { ssr: false });
 
 export default function GamePage() {
-
-    const {
-        socket,
-        connected
-    } = useSocketStore(state => ({
-        socket: state.socket,
-        connected: state.connected
-    }));
-
-    // const router = useRouter()
-    // const pathname = usePathname()
-    const searchParams = useSearchParams()
-    const params = Object.fromEntries(searchParams.entries());
-    const { server } = params
-
-    // const showMenu = useStore(state => state.showMenu)
-    const sceneKey = useStore(state => state.sceneKey)
-    const showMenu = useStore(state => state.showMenu)
-    const sidebar = useStore(state => state.sidebar)
-    const nickname = useStore(state => state.nickname)
-    const reloadScene = useStore(state => state.reloadScene)
-
-    useHotkeys('r', () => {
-        reloadScene();
-    }, []);
-
-    // const { controllerState, setControllerState } = useControllerStore()
-    // const [showControllerState, setShowControllerState] = useState(false)
-
-    // const [ cameraMode, setCameraMode ] = useState('Player')
-
-    // const [players, setPlayers] = useState([])
+    const socket = useSocketStore((state) => state.socket);
+    const connected = useSocketStore((state) => state.connected);
+    const server = useSearchParams().get("server");
+    const sceneKey = useStore((state) => state.sceneKey);
+    const showMenu = useStore((state) => state.showMenu);
+    const sidebar = useStore((state) => state.sidebar);
+    const nickname = useStore((state) => state.nickname);
+    const { isFullscreen } = useFullscreen();
 
     useEffect(() => {
-
-        if (server && socket.connected) {
-            socket.emit('join-room', `game:cannon-room-${server}`, {
+        if (server && socket?.connected) {
+            socket.emit("join-room", `game:cannon-room-${server}`, {
                 game_id: server,
-                nickname: nickname,
-                client_version: '1',
-
+                nickname,
+                client_version: "1",
             });
         }
-
-        // return function cleanup() {
-        //     socket.emit('leave-room', 'game:glass-ceiling-landing')
-        // };
-
-    }, [server, connected, nickname]);
-
-    // const [showMenu, setShowMenu] = useState(false)
-
-    // const [touchControlsEnabled, setTouchControlsEnabled] = useLocalStorageNew("game:touchControlsEnabled", false)
-
-    // const [sceneKey, setSceneKey] = useState(0);
-
-    // const [gameState, setGameState] = useState(false)
-
-    const setPlayerDisabled = useGameStore(state => state.setPlayerDisabled)
-
-    // Function to handle scene reload
-    // const reloadScene = () => {
-    //     setSceneKey((prevKey) => prevKey + 1);
-    //     setPlayerDisabled(false);
-    // };
-
-    // const { isFullscreen, requestFullscreen, exitFullscreen } = useFullscreen();
+    }, [server, socket, connected, nickname]);
 
     return (
-
-        <div
-            className={classNames(
-                `${process.env.NEXT_PUBLIC_GAME_KEY}-game-page`,
-                {
-                    'menu-open': showMenu,
-                    'fullscreen': useFullscreen().isFullscreen,
-                    'show-sidebar': sidebar,
-                }
-            )}
+        <Box
+            className={classNames(`${process.env.NEXT_PUBLIC_GAME_KEY}-game-page`, {
+                "menu-open": showMenu,
+                fullscreen: isFullscreen,
+                "show-sidebar": sidebar,
+            })}
             id={`${process.env.NEXT_PUBLIC_GAME_KEY}-game-page`}
+            sx={{
+                position: "relative",
+                display: "flex",
+                "& .background": {
+                    position: "fixed",
+                    inset: 0,
+                    height: "100%",
+                    width: "100%",
+                    zIndex: 0,
+                    overflow: "hidden",
+                    "& img": { filter: "blur(2px) brightness(0.8)", transform: "scale(1.05)" },
+                },
+                "& .container": { position: "relative", zIndex: 1 },
+                "& .touch-controls-area": {
+                    position: "fixed",
+                    bottom: 50,
+                    left: 0,
+                    width: "100%",
+                    height: 150,
+                    zIndex: 1,
+                    bgcolor: "rgba(0,0,0,0.5)",
+                    p: "1rem",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                },
+                "& .debug-info, & .game-info": {
+                    height: "calc(100vh - 100px)",
+                    width: 300,
+                    flexShrink: 0,
+                    "& .card, & .MuiCard-root": { height: "100%" },
+                },
+                "& .game": { p: "0.5rem 1rem", display: "flex", justifyContent: "center" },
+                "& .game-panel": { width: "100%" },
+            }}
         >
-
             <GameMenu
                 useStore={useStore}
                 LeftPanelContent={LeftPanelContent}
-                menuBarConfig={{
-                    style: "Corner Button",
-                    menuBarButtonPosition: "Left"
-                }}
-                sidebarConfig={{
-                    style: "Static Panel",
-                }}
+                menuBarConfig={{ style: "Corner Button", menuBarButtonPosition: "Left" }}
+                sidebarConfig={{ style: "Static Panel" }}
             />
-
-            <div className='canvas-wrap'>
-
-                <GameCanvas
-                    key={sceneKey}
-                />
-
-            </div>
-
-        </div>
+            <Box
+                className="canvas-wrap"
+                sx={{
+                    position: "relative",
+                    width: "100vw",
+                    height: "100vh",
+                    "& canvas": {
+                        position: "absolute",
+                        width: "100%",
+                        height: "100%",
+                        left: 0,
+                        top: 0,
+                    },
+                }}
+            >
+                <GameCanvas key={sceneKey} />
+            </Box>
+        </Box>
     );
 }

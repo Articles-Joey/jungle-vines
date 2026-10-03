@@ -1,53 +1,29 @@
-import { useStore } from "@/hooks/useStore"
-import ArticlesButton from "./Button"
+"use client";
 
-export default function ScoreCard({ score }) {
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import ReplayIcon from "@mui/icons-material/Replay";
+import { useStore } from "@/hooks/useStore";
+import ArticlesButton from "./Button";
 
-    const maxDistanceTraveled = useStore((state) => state.maxDistanceTraveled)
-    const setMaxDistanceTraveled = useStore((state) => state.setMaxDistanceTraveled)
+export default function ScoreCard() {
+    const maxDistanceTraveled = useStore((state) => state.maxDistanceTraveled);
+    const setMaxDistanceTraveled = useStore((state) => state.setMaxDistanceTraveled);
 
     return (
-        <div
-            className="card card-articles card-sm"            
-        >
-
-            {/* <div style={{ position: 'relative', height: '200px' }}>
-                        <Image
-                            src={Logo}ddda
-                            alt=""
-                            fill
-                            style={{ objectFit: 'cover' }}
-                        />
-                    </div> */}
-
-            <div className='card-header flex-header'>
-
-                <div className="">High Score</div>
-
-                <ArticlesButton
-                    className=''
-                    small
-                    onClick={() => {
-                        setMaxDistanceTraveled(0)
-                    }}
-                >
-                    <i className="fad fa-redo"></i>
+        <Card sx={{ bgcolor: "game.card", color: "#fff", backgroundImage: "none", fontSize: "0.875rem", border: 1, borderColor: "divider" }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", bgcolor: "game.cardHeader", p: "0.5rem", borderBottom: 1, borderColor: "divider" }}>
+                <Box>High Score</Box>
+                <ArticlesButton small aria-label="Reset high score" onClick={() => setMaxDistanceTraveled(0)}>
+                    <ReplayIcon fontSize="small" />
                 </ArticlesButton>
-
-            </div>
-
-            <div className="card-body">
-
-                <h1 className="stick-regular mb-0">
+            </Box>
+            <CardContent sx={{ p: 1, "&:last-child": { pb: 1 } }}>
+                <Box component="h1" sx={{ fontFamily: '"Stick", sans-serif', fontWeight: 400, fontStyle: "normal", fontSize: "calc(1.375rem + 1.5vw)", "@media (min-width: 1200px)": { fontSize: "2.5rem" }, lineHeight: 1.2, m: 0 }}>
                     {maxDistanceTraveled.toFixed(0)}m
-                </h1>
-
-            </div>
-
-            {/* <div className="card-footer d-flex flex-wrap justify-content-center">
-
-            </div> */}
-
-        </div>
-    )
+                </Box>
+            </CardContent>
+        </Card>
+    );
 }

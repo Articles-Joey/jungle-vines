@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    transpilePackages: ['@articles-media/articles-dev-box'],
     reactCompiler: true,
     poweredByHeader: false,
     images: {

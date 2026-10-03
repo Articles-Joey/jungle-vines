@@ -13,15 +13,9 @@ import { useAudioStore } from '@/hooks/useAudioStore';
 import useTouchControlsStore from '@/hooks/useTouchControlsStore';
 import { useSocketStore } from '@/hooks/useSocketStore';
 import { useHotkeys } from 'react-hotkeys-hook';
+import HotkeyHandler from '@articles-media/articles-dev-box/HotkeyHandler';
 
-export default function LayoutClient({ children }) {
-
-    const darkMode = useStore((state) => state?.darkMode);
-
-    useHotkeys('r', () => {
-        console.log("Reloading Scene")
-        useStore.getState().reloadScene();
-    }, [])
+export default function LayoutClient() {
 
     return (
         <>
@@ -33,6 +27,7 @@ export default function LayoutClient({ children }) {
                 useStore={useStore}
             />
             <Suspense>
+                <HotkeyHandler useStore={useStore} useHotkeys={useHotkeys} />
                 <GlobalClientModals
                     useStore={useStore}
                     useAudioStore={useAudioStore}
@@ -84,7 +79,7 @@ export default function LayoutClient({ children }) {
                         }
                     }}
                     infoModalConfig={{
-                        previewImage: darkMode ? "img/preview-dark.webp" : "img/preview.webp",
+                        previewImage: "img/preview.webp",
                     }}
                 />
             </Suspense>

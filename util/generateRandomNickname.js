@@ -1,5 +1,3 @@
-
-
 const jungleAdjectives = [
     'Wild', 'Lush', 'Mysterious', 'Vibrant', 'Shady', 'Sunny', 'Noisy', 'Silent',
     'Swift', 'Clever', 'Brave', 'Sneaky', 'Curious', 'Spotted', 'Striped', 'Green',
