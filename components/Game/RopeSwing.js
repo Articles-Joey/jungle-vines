@@ -1,61 +1,74 @@
-import { createContext, createRef, forwardRef, memo, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-
-import { Canvas, useFrame, useThree } from "@react-three/fiber"
-
-import { Debug, Physics, useBox, useCylinder, useSphere } from "@react-three/cannon";
+import { useThree } from "@react-three/fiber";
+import {
+    BallCollider,
+    CylinderCollider,
+    RigidBody,
+    useBeforePhysicsStep,
+    useRapier,
+} from "@react-three/rapier";
+import { useEffect, useMemo, useRef } from "react";
+import { Quaternion, Vector3 } from "three";
 import { useGameStore } from "@/hooks/useGameStore";
 import { useStore } from "@/hooks/useStore";
 import { ModelSpider } from "../Models/Spider";
+import RopeMesh from "./RopeMesh";
 
 function RopeEnemy({ position, args, swingSpeed, swingPhase, swingAmplitude }) {
+    const rigidBodyRef = useRef(null);
+    const initialRotation = useRef(null);
+    const clock = useThree((state) => state.clock);
+    const { rapier } = useRapier();
+    const seed = useStore((state) => state.seed);
+    const offset = useMemo(() => new Vector3(), []);
+    const pivot = useMemo(() => new Vector3(), []);
 
-    const seed = useStore(state => state.seed);
-
-    const setAttachedRope = useGameStore(state => state.setAttachedRope)
-    const setPlayerDisabled = useGameStore(state => state.setPlayerDisabled)
-
-    // const climbSpeed = 1;
     const climbSpeed = useMemo(() => {
         const s = Number(seed) || 0;
-        // Use a pseudo-random function based on seed and position
         const rand = Math.abs(Math.sin(s + position[0] * 12.9898 + position[1] * 78.233));
-        return 0.2 + rand * 0.8; // Speed between 0.2 and 1.0
+        return 0.2 + rand * 0.8;
     }, [seed, position]);
-
     const climbRange = args[2] / 2;
 
-    const [enemyRef, enemyApi] = useSphere(() => ({
-        mass: 0,
-        type: 'Kinematic',
-        args: [1],
-        position: position,
-        onCollide: (e) => {
-            if (e.body.userData?.tag === 'player' && useGameStore.getState().attachedRope) {
-                console.log("Enemy collided with player on rope!");
-                setPlayerDisabled(true)
-                setAttachedRope(null)
-            }
+    const handlePlayerContact = ({ other }) => {
+        const state = useGameStore.getState();
+        if (other.rigidBodyObject?.userData?.tag === "player" && state.attachedRope) {
+            state.setPlayerDisabled(true);
+            state.setAttachedRope(null);
         }
-    }))
+    };
 
-    useFrame(({ clock }) => {
-        const time = clock.getElapsedTime();
+    useBeforePhysicsStep(() => {
+        const body = rigidBodyRef.current;
+        if (!body) return;
+        if (!initialRotation.current) {
+            initialRotation.current = new Quaternion().copy(body.rotation());
+            pivot.copy(body.translation());
+        }
+
+        const time = clock.elapsedTime;
         const angle = Math.sin(time * swingSpeed + swingPhase) * swingAmplitude;
-
         const climbPosition = -climbRange + Math.sin(time * climbSpeed) * climbRange;
-
-        const xEnemy = position[0] - climbPosition * Math.sin(angle);
-        const yEnemy = position[1] + climbPosition * Math.cos(angle);
-        const zEnemy = position[2];
-
-        enemyApi.position.set(xEnemy, yEnemy, zEnemy);
-    })
+        offset.set(-climbPosition * Math.sin(angle), climbPosition * Math.cos(angle), 0);
+        offset.applyQuaternion(initialRotation.current).add(pivot);
+        body.setNextKinematicTranslation(offset);
+    });
 
     return (
-        <group ref={enemyRef}>
+        <RigidBody
+            ref={rigidBodyRef}
+            type="kinematicPosition"
+            position={position}
+            colliders={false}
+        >
+            <BallCollider
+                args={[1]}
+                sensor
+                activeCollisionTypes={rapier.ActiveCollisionTypes.ALL}
+                onIntersectionEnter={handlePlayerContact}
+            />
             <ModelSpider scale={0.5} />
-        </group>
-    )
+        </RigidBody>
+    );
 }
 
 export default function RopeSwing({
@@ -64,96 +77,98 @@ export default function RopeSwing({
     rotation,
     swingSpeed: propSwingSpeed,
     swingPhase: propSwingPhase,
-    hasEnemy: propHasEnemy
+    hasEnemy: propHasEnemy,
 }) {
-
-    const groupRef = useRef();
+    const rigidBodyRef = useRef(null);
+    const initialRotation = useRef(null);
+    const clock = useThree((state) => state.clock);
+    const { rapier } = useRapier();
+    const swingAxis = useMemo(() => new Vector3(0, 0, 1), []);
+    const swingRotation = useMemo(() => new Quaternion(), []);
+    const nextRotation = useMemo(() => new Quaternion(), []);
 
     const { swingSpeed, swingPhase, hasEnemy } = useMemo(() => ({
-        swingSpeed: propSwingSpeed ?? (1.5 + Math.random() * 1), // Random speed between 1.5 and 2.5
-        swingPhase: propSwingPhase ?? (Math.random() * Math.PI * 2), // Random starting point
-        hasEnemy: propHasEnemy ?? (Math.random() > 0.5) // 50% chance of enemy
-    }), [propSwingSpeed, propSwingPhase, propHasEnemy])
+        swingSpeed: propSwingSpeed ?? (1.5 + Math.random()),
+        swingPhase: propSwingPhase ?? (Math.random() * Math.PI * 2),
+        hasEnemy: propHasEnemy ?? (Math.random() > 0.5),
+    }), [propSwingSpeed, propSwingPhase, propHasEnemy]);
+    const swingAmplitude = Math.PI / 6;
+    const ropeRadius = Math.max(args[0], args[1]) * 2;
 
-    const swingAmplitude = Math.PI / 6; // Adjust the angle range (e.g., 30 degrees)
-
-    // const enemeyRef = useRef();
-    const climbSpeed = 1; // Speed of the enemy's climb
-    const climbRange = args[2] / 2;
-
-    const setAttachedRope = useGameStore(state => state.setAttachedRope)
-    const setPlayerDisabled = useGameStore(state => state.setPlayerDisabled)
-
-    const [ref, api] = useCylinder(() => ({
-        mass: 0,
-        type: 'Kinematic',
-        args: args,
-        position: [position[0], position[1] - args[2] / 2, position[2]],
-        onCollide: (e) => {
-            // console.log("Player collided with the rope swing, stick player to swing!")
-            const { attachedRope, lastRopeDetachTime, playerDisabled } = useGameStore.getState();
-            if (e.body.userData?.tag === 'player' && !attachedRope && !playerDisabled) {
-                // TODO - Delay should be unique to last rope, each rope should generate unique id on mount and use this to track in store?
-                if (Date.now() - lastRopeDetachTime < 200) return;
-                console.log("Attaching to rope")
-                setAttachedRope({
-                    position: position,
-                    swingSpeed: swingSpeed,
-                    swingPhase: swingPhase,
-                    swingAmplitude: swingAmplitude,
-                    length: args[2]
-                })
+    useEffect(() => {
+        const ropeBody = rigidBodyRef.current;
+        return () => {
+            const state = useGameStore.getState();
+            if (state.attachedRope?.ropeBody === ropeBody) {
+                state.setAttachedRope(null);
             }
+        };
+    }, []);
+
+    const handlePlayerContact = ({ other }) => {
+        const state = useGameStore.getState();
+        const ropeBody = rigidBodyRef.current;
+        if (
+            !ropeBody ||
+            other.rigidBodyObject?.userData?.tag !== "player" ||
+            state.attachedRope ||
+            state.playerDisabled ||
+            Date.now() - state.lastRopeDetachTime < 200
+        ) return;
+
+        const pivot = ropeBody.translation();
+        state.setAttachedRope({
+            ropeBody,
+            position: [pivot.x, pivot.y, pivot.z],
+            rotation: initialRotation.current?.clone() ?? new Quaternion().copy(ropeBody.rotation()),
+            swingSpeed,
+            swingPhase,
+            swingAmplitude,
+            length: args[2],
+        });
+    };
+
+    useBeforePhysicsStep(() => {
+        const body = rigidBodyRef.current;
+        if (!body) return;
+        // Compose the swing with the parent's world rotation around the anchor.
+        if (!initialRotation.current) {
+            initialRotation.current = new Quaternion().copy(body.rotation());
         }
-    }))
-
-    useFrame(({ clock }) => {
-
-        const time = clock.getElapsedTime();
-        const angle = Math.sin(time * swingSpeed + swingPhase) * swingAmplitude;
-
-        if (groupRef.current) {
-            // const time = clock.getElapsedTime();
-            // Update rotation on the X-axis to create a back-and-forth motion
-            groupRef.current.rotation.z = angle;
-        }
-
-        const r = args[2] / 2;
-        const xOffset = r * Math.sin(angle);
-        const yOffset = -r * Math.cos(angle);
-
-        api.position.set(
-            position[0] + xOffset,
-            position[1] + yOffset,
-            position[2]
-        )
-        api.rotation.set(0, 0, angle)
-
+        const angle = Math.sin(clock.elapsedTime * swingSpeed + swingPhase) * swingAmplitude;
+        swingRotation.setFromAxisAngle(swingAxis, angle);
+        nextRotation.copy(initialRotation.current).multiply(swingRotation);
+        body.setNextKinematicRotation(nextRotation);
     });
 
     return (
         <group rotation={rotation}>
-
-            {/* Fixed Anchor */}
-            <mesh position={position} castShadow>
+            <mesh
+                position={position}
+                castShadow
+            >
                 <boxGeometry args={[1, 1, 1]} />
                 <meshStandardMaterial color="saddlebrown" />
             </mesh>
-
-            {/* Moving Collision Body */}
-            <mesh ref={ref} visible={false}>
-                <cylinderGeometry args={args} />
-            </mesh>
-
-            <group ref={groupRef} position={position}>
-
-                <mesh position={[0, -args[2] / 2, 0]} castShadow>
-                    <cylinderGeometry args={args} />
-                    <meshStandardMaterial color="green" />
-                </mesh>
-
-            </group>
-
+            <RigidBody
+                ref={rigidBodyRef}
+                type="kinematicPosition"
+                position={position}
+                colliders={false}
+            >
+                <CylinderCollider
+                    args={[args[2] / 2, ropeRadius]}
+                    position={[0, -args[2] / 2, 0]}
+                    sensor
+                    activeCollisionTypes={rapier.ActiveCollisionTypes.ALL}
+                    onIntersectionEnter={handlePlayerContact}
+                />
+                <RopeMesh
+                    length={args[2]}
+                    radius={ropeRadius}
+                    position={[0, -args[2] / 2, 0]}
+                />
+            </RigidBody>
             {hasEnemy && (
                 <RopeEnemy
                     position={position}
@@ -163,8 +178,6 @@ export default function RopeSwing({
                     swingAmplitude={swingAmplitude}
                 />
             )}
-
         </group>
-    )
-
+    );
 }

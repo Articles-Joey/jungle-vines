@@ -1,378 +1,249 @@
-import { useFrame, useThree } from "@react-three/fiber"
-import { useSphere } from "@react-three/cannon"
-import { memo, useEffect, useRef, useState } from "react"
-import { Vector3 } from "three"
-import * as THREE from 'three';
-import { useKeyboard } from "@/hooks/useKeyboard"
-
+import { useFrame, useThree } from "@react-three/fiber";
+import { CapsuleCollider, RigidBody, useBeforePhysicsStep, useRapier } from "@react-three/rapier";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Vector3 } from "three";
+import { useKeyboard } from "@/hooks/useKeyboard";
 import { Model as ModelKingMen } from "@/components/Models/King";
-
-import { useControllerStore } from '@/hooks/useControllerStore';
+import { useControllerStore } from "@/hooks/useControllerStore";
 import { useControlsStore, useGameStore } from "@/hooks/useGameStore";
 import { useStore } from "@/hooks/useStore";
 import { degToRad } from "three/src/math/MathUtils";
 
 const JUMP_FORCE = 6;
 const SPEED = 4;
+// The capsule center sits this far above the rigid body's origin.
+const CAPSULE_HALF_HEIGHT = 2.25;
+const CAPSULE_RADIUS = 0.5;
 
-let lastLocation
+function PlayerBase() {
+    const rigidBodyRef = useRef(null);
+    const colliderRef = useRef(null);
+    const ropeHeight = useRef(0);
+    const previousRope = useRef(null);
+    const lastLocation = useRef(null);
+    const { camera, clock } = useThree();
+    const { rapier } = useRapier();
+    const ropeOffset = useMemo(() => new Vector3(), []);
+    const launchVelocity = useMemo(() => new Vector3(), []);
+    const swingAxis = useMemo(() => new Vector3(0, 0, 1), []);
+    const playerUserData = useMemo(() => ({ tag: "player" }), []);
 
-function myToFixed(i, digits) {
-    var pow = Math.pow(10, digits);
-
-    return Math.floor(i * pow) / pow;
-}
-
-function PlayerBase(props) {
-
-    const playerModelRef = useRef()
-
-    // const { setPlayerData, teleportPlayer, setTeleportPlayer } = props;
-
-    const {
-        cameraMode, setCameraMode,
-        teleport, setTeleport,
-        setPlayerLocation,
-        // maxHeight, setMaxHeight,
-        shift, setShift,
-        attachedRope, setAttachedRope,
-        setLastRopeDetachTime,
-        playerDisabled,
-    } = useGameStore()
-
-    useEffect(() => {
-        if (playerDisabled) {
-            const audio = new Audio("/audio/roblox-death-sound.mp3")
-            audio.play()
-        }
-    }, [playerDisabled])
-
-    const {
-        touchControls, setTouchControls
-    } = useControlsStore()
-
-    // const { maxDistanceTraveled, setMaxDistanceTraveled } = useStore()
-    const maxDistanceTraveled = useStore((state) => state.maxDistanceTraveled)
-    const setMaxDistanceTraveled = useStore((state) => state.setMaxDistanceTraveled)
+    const cameraMode = useGameStore((state) => state.cameraMode);
+    const playerDisabled = useGameStore((state) => state.playerDisabled);
     const cameraControlMethod = useStore((state) => state.cameraControlMethod);
-    const debug = useStore(state => state.debug);
-
-    const setPlayerDisabled = useGameStore((state) => state.setPlayerDisabled)
-
-    const { controllerState, setControllerState } = useControllerStore()
-
-    const ropeHeight = useRef(0)
-
-    useEffect(() => {
-        if (attachedRope) {
-            const pivotY = attachedRope.position[1]
-            const playerY = pos.current[1]
-            let h = pivotY - playerY
-            h = Math.max(1, Math.min(h, attachedRope.length))
-            ropeHeight.current = h
-            api.velocity.set(0, 0, 0)
-        }
-    }, [attachedRope])
-
-    // Attach event listeners when the component mounts
-    useEffect(() => {
-
-        if (controllerState.axes && Math.abs(controllerState?.axes[0]) > 0.3) {
-
-            if (controllerState?.axes[0] > 0) {
-                api.position.set([-1, 5, 0]);
-            } else {
-                api.position.set([1, 5, 0]);
-            }
-
-        }
-
-    }, [controllerState]);
-
-    useEffect(() => {
-
-        if (teleport) {
-
-            console.log("Teleport has been called!", teleport)
-            setAttachedRope(null)
-            api.position.set(teleport[0], teleport[1], teleport[2]);
-            api.velocity.set(0, 0, 0);
-            setTeleport(false)
-
-        }
-
-    }, [teleport]);
-
-    const { moveBackward, moveForward, moveRight, moveLeft, jump, shift: isShifting, crouch } = useKeyboard()
-
+    const debug = useStore((state) => state.debug);
+    const { moveBackward, moveForward, moveRight, moveLeft, jump } = useKeyboard();
     const [lastMove, setLastMove] = useState("Right");
-    useEffect(() => {
-        if (moveRight) {
-            setLastMove("Right")
-        }
-        if (moveLeft) {
-            setLastMove("Left")
-        }
-    }, [moveRight, moveLeft])
-
-    const { camera } = useThree()
-
-    const [ref, api] = useSphere(() => ({
-        mass: 1,
-        args: [0.5],
-        position: [0, 2, 0],
-        userData: { tag: 'player' }
-    }))
 
     useEffect(() => {
         if (playerDisabled) {
-            api.collisionFilterGroup.set(0)
-            api.collisionFilterMask.set(0)
-        } else {
-            api.collisionFilterGroup.set(1)
-            api.collisionFilterMask.set(-1)
+            const audio = new Audio("/audio/roblox-death-sound.mp3");
+            audio.play();
         }
-    }, [playerDisabled])
+    }, [playerDisabled]);
 
-    const material = new THREE.MeshPhysicalMaterial({
-        color: 'red',
+    // Read the store during physics updates so grabs, death, and teleports take
+    // effect even before React has rendered the new state.
+    useBeforePhysicsStep((world) => {
+        const body = rigidBodyRef.current;
+        if (!body) return;
+        let state = useGameStore.getState();
+
+        if (state.teleport) {
+            const [x, y, z] = state.teleport;
+            body.setBodyType(rapier.RigidBodyType.Dynamic, true);
+            body.setTranslation({ x, y, z }, true);
+            body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+            state.setAttachedRope(null);
+            state.setTeleport(false);
+            state = useGameStore.getState();
+        }
+
+        if (body.translation().y < -15) {
+            body.setBodyType(rapier.RigidBodyType.Dynamic, true);
+            body.setTranslation({ x: 0, y: 10, z: 0 }, true);
+            body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+            state.setAttachedRope(null);
+            state.setPlayerDisabled(false);
+            state = useGameStore.getState();
+        }
+
+        const collisionGroups = state.playerDisabled ? 0 : 0xffffffff;
+        if (colliderRef.current?.collisionGroups() !== collisionGroups) {
+            colliderRef.current?.setCollisionGroups(collisionGroups);
+        }
+
+        const rope = state.playerDisabled ? null : state.attachedRope;
+        const bodyType = rope
+            ? rapier.RigidBodyType.KinematicPositionBased
+            : rapier.RigidBodyType.Dynamic;
+        if (body.bodyType() !== bodyType) {
+            body.setBodyType(bodyType, true);
+        }
+
+        if (state.playerDisabled) {
+            previousRope.current = null;
+            return;
+        }
+
+        const { touchControls, setTouchControls } = useControlsStore.getState();
+        const axes = useControllerStore.getState().controllerState?.axes;
+        const controllerX = axes && Math.abs(axes[0]) > 0.3 ? axes[0] : 0;
+
+        if (rope) {
+            if (previousRope.current !== rope) {
+                // Measure from the capsule center along the rotated rope.
+                const playerPosition = body.translation();
+                ropeOffset.set(
+                    playerPosition.x - rope.position[0],
+                    playerPosition.y + CAPSULE_HALF_HEIGHT - rope.position[1],
+                    playerPosition.z - rope.position[2],
+                );
+                ropeOffset.applyQuaternion(rope.rotation.clone().invert());
+                const angle = Math.sin(clock.elapsedTime * rope.swingSpeed + rope.swingPhase) * rope.swingAmplitude;
+                ropeOffset.applyAxisAngle(swingAxis, -angle);
+                ropeHeight.current = Math.max(1, Math.min(-ropeOffset.y, rope.length));
+                body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+            }
+            previousRope.current = rope;
+
+            const climbSpeed = 6;
+            const previousHeight = ropeHeight.current;
+            const climbDirection = (moveBackward ? 1 : 0) - (moveForward ? 1 : 0);
+            ropeHeight.current = Math.max(
+                1,
+                Math.min(previousHeight + climbDirection * climbSpeed * world.timestep, rope.length),
+            );
+            const climbVelocity = (ropeHeight.current - previousHeight) / world.timestep;
+            const time = clock.elapsedTime;
+            const angle = Math.sin(time * rope.swingSpeed + rope.swingPhase) * rope.swingAmplitude;
+
+            ropeOffset.set(
+                ropeHeight.current * Math.sin(angle),
+                -ropeHeight.current * Math.cos(angle),
+                0,
+            ).applyQuaternion(rope.rotation);
+            const nextPosition = {
+                x: rope.position[0] + ropeOffset.x,
+                // The player stays upright; place its capsule center on the rope.
+                y: rope.position[1] + ropeOffset.y - CAPSULE_HALF_HEIGHT,
+                z: rope.position[2] + ropeOffset.z,
+            };
+
+            if (jump || touchControls.jump) {
+                const thetaDot = rope.swingAmplitude * rope.swingSpeed *
+                    Math.cos(time * rope.swingSpeed + rope.swingPhase);
+                launchVelocity.set(
+                    ropeHeight.current * Math.cos(angle) * thetaDot + climbVelocity * Math.sin(angle),
+                    ropeHeight.current * Math.sin(angle) * thetaDot - climbVelocity * Math.cos(angle),
+                    0,
+                ).applyQuaternion(rope.rotation);
+                launchVelocity.y += JUMP_FORCE;
+
+                // Switch immediately so Rapier integrates the release velocity
+                // as a dynamic body in this same step.
+                body.setBodyType(rapier.RigidBodyType.Dynamic, true);
+                body.setTranslation(nextPosition, true);
+                body.setLinvel(launchVelocity, true);
+                state.setAttachedRope(null);
+                state.setLastRopeDetachTime(Date.now());
+                previousRope.current = null;
+                if (touchControls.jump) {
+                    setTouchControls({ ...touchControls, jump: false });
+                }
+            } else {
+                body.setNextKinematicTranslation(nextPosition);
+            }
+            return;
+        }
+
+        previousRope.current = null;
+        const direction = (
+            (moveRight || touchControls.right ? 1 : 0) -
+            (moveLeft || touchControls.left ? 1 : 0)
+        ) || controllerX;
+        if (direction > 0) setLastMove("Right");
+        if (direction < 0) setLastMove("Left");
+
+        const velocity = body.linvel();
+        const shouldJump = (jump || touchControls.jump) && Math.abs(velocity.y) < 0.05;
+        body.setLinvel({
+            x: direction * SPEED * (state.shift ? 2 : 1),
+            y: shouldJump ? JUMP_FORCE : velocity.y,
+            z: 0,
+        }, true);
+        if (shouldJump && touchControls.jump) {
+            setTouchControls({ ...touchControls, jump: false });
+        }
     });
 
-    const vel = useRef([0, 0, 0])
-    useEffect(() => {
-        api.velocity.subscribe((v) => vel.current = v)
-    }, [api.velocity])
+    useFrame(() => {
+        const body = rigidBodyRef.current;
+        if (!body) return;
+        const { x, y, z } = body.translation();
 
-    const pos = useRef([0, 0, 0])
-    useEffect(() => {
+        const newLocation = new Vector3(
+            Math.floor(x * 100) / 100,
+            Math.floor(y * 100) / 100,
+            Math.floor(z * 100) / 100,
+        );
+        if (!lastLocation.current?.equals(newLocation)) {
+            useGameStore.getState().setPlayerLocation(newLocation);
+            lastLocation.current = newLocation;
+        }
+        const state = useStore.getState();
+        if (x > state.maxDistanceTraveled) state.setMaxDistanceTraveled(x);
 
-        api.position.subscribe((p) => {
-
-            pos.current = p
-
-            if (p[1] < -15) {
-                console.log("Y position below 0. Reset player.");
-
-                api.position.set(
-                    0, 10, 0
-                );
-
-                setPlayerDisabled(false)
-
-                camera.lookAt(0, 0, -50);
-                api.velocity.set(0, 0, 0);
-            }
-
-            if (playerModelRef.current) {
-                playerModelRef.current.position.set(...p);
-            }
-
-        })
-
-    }, [api.position])
-
-    // useEffect(() => {
-    //     console.log("Shift", isShifting)
-    //     setShift(isShifting)
-    // }, [isShifting])
-
-    const updateCamera = (x, y, z) => {
         if (cameraMode !== "Player") return;
-
-        if (cameraControlMethod === 'Side Scroll') {
-            camera.position.copy(new Vector3(x, y + 8, 50))
-            camera.lookAt(new Vector3(x, y, 0))
-        } else if (cameraControlMethod === 'Third Person') {
+        if (cameraControlMethod === "Side Scroll") {
+            camera.position.set(x, y + 8, 50);
+            camera.lookAt(x, y, 0);
+        } else if (cameraControlMethod === "Third Person") {
             const offset = lastMove === "Right" ? -10 : 10;
             const lookDir = lastMove === "Right" ? 10 : -10;
-            camera.position.copy(new Vector3(x + offset, y + 5, 0))
-            camera.lookAt(new Vector3(x + lookDir, y, 0))
-        } else if (cameraControlMethod === 'First Person') {
+            camera.position.set(x + offset, y + 5, 0);
+            camera.lookAt(x + lookDir, y, 0);
+        } else if (cameraControlMethod === "First Person") {
             const lookDir = lastMove === "Right" ? 10 : -10;
-            camera.position.copy(new Vector3(x, y + 0.5, 0))
-            camera.lookAt(new Vector3(x + lookDir, y, 0))
-        } else if (cameraControlMethod === 'Orbit') {
-            // Do nothing
+            camera.position.set(x, y + 0.5, 0);
+            camera.lookAt(x + lookDir, y, 0);
         }
-    }
-
-    useFrame(({ clock }, delta) => {
-
-        if (playerDisabled) {
-            updateCamera(pos.current[0], pos.current[1], pos.current[2])
-            return
-        }
-
-        if (attachedRope) {
-            let climbVelocity = 0;
-            const climbSpeed = 6;
-
-            if (moveForward) {
-                ropeHeight.current -= climbSpeed * delta
-                climbVelocity = -climbSpeed;
-            }
-            if (moveBackward) {
-                ropeHeight.current += climbSpeed * delta
-                climbVelocity = climbSpeed;
-            }
-            ropeHeight.current = Math.max(1, Math.min(ropeHeight.current, attachedRope.length))
-
-            const time = clock.getElapsedTime();
-            const phase = attachedRope.swingPhase || 0;
-            const angle = Math.sin(time * attachedRope.swingSpeed + phase) * attachedRope.swingAmplitude;
-            
-            const pivot = new Vector3(...attachedRope.position)
-            const offset = new Vector3(0, -ropeHeight.current, 0)
-            offset.applyAxisAngle(new Vector3(0, 0, 1), angle)
-            
-            const newPos = pivot.clone().add(offset)
-            
-            api.position.set(newPos.x, newPos.y, newPos.z)
-            api.velocity.set(0, 0, 0)
-
-            updateCamera(newPos.x, newPos.y, newPos.z)
-
-            if ((jump || touchControls.jump)) {
-                console.log("Jump off rope")
-                setAttachedRope(null)
-                setLastRopeDetachTime(Date.now())
-
-                const w = attachedRope.swingSpeed;
-                const A = attachedRope.swingAmplitude;
-                const L = ropeHeight.current;
-                const phase = attachedRope.swingPhase || 0;
-                
-                const thetaDot = A * w * Math.cos(time * w + phase);
-                
-                const vx = L * Math.cos(angle) * thetaDot;
-                const vy = L * Math.sin(angle) * thetaDot;
-
-                const radialVx = climbVelocity * Math.sin(angle);
-                const radialVy = climbVelocity * -Math.cos(angle);
-
-                api.velocity.set(vx + radialVx, vy + radialVy + JUMP_FORCE, 0)
-
-                if (touchControls.jump) {
-                    setTouchControls({ ...touchControls, jump: false })
-                }
-            }
-            return
-        }
-
-        updateCamera(pos.current[0], pos.current[1], pos.current[2])
-
-        let posX = 0
-        if (pos.current[0]) {
-            posX = myToFixed(pos.current[0], 2)
-        }
-
-        // console.log(pos.current[1])
-        let posY = 0
-        if (pos.current[1]) {
-            posY = myToFixed(pos.current[1], 2)
-        }
-
-        let posZ = 0
-        if (pos.current[2]) {
-            posZ = myToFixed(pos.current[2], 2)
-        }
-
-        // console.log(posX)
-
-        let newLocation = new Vector3(posX, posY, posZ)
-
-        if (JSON.stringify(lastLocation) !== JSON.stringify(newLocation)) {
-            // console.log(newLocation, lastLocation)
-            setPlayerLocation(newLocation)
-            lastLocation = newLocation
-        }
-        // else {
-        //     console.log("location unchanged")
-        // }
-
-        // if (pos.current[1] > maxHeight) {
-        //     setMaxHeight(pos.current[1].toFixed(2))
-        // }
-
-        if (pos.current[0] > maxDistanceTraveled) {
-            setMaxDistanceTraveled(pos.current[0])
-        }
-
-        const direction = new Vector3()
-
-        const frontVector = new Vector3(
-            0,
-            0,
-            // Disabled for now
-            // (moveBackward ? 1 : 0) - (moveForward ? 1 : 0)
-            0
-        )
-
-        const sideVector = new Vector3(
-            (moveLeft || touchControls.left ? 1 : 0) - (moveRight || touchControls.right ? 1 : 0),
-            0,
-            0,
-        )
-
-        direction
-            .subVectors(frontVector, sideVector)
-            .normalize()
-            .multiplyScalar(SPEED * (shift ? 2 : 1))
-        // .applyEuler(camera.rotation)
-
-        api.velocity.set(direction.x, vel.current[1], direction.z)
-
-        if ((jump || touchControls.jump) && Math.abs(vel.current[1]) < 0.05) {
-
-            console.log("Jump understood")
-
-            api.velocity.set(vel.current[0], JUMP_FORCE, vel.current[2])
-
-            if (
-                touchControls.jump
-                // ||
-                // touchControls.left
-                // ||
-                // touchControls.right
-            ) {
-                setTouchControls({
-                    ...touchControls,
-                    jump: false,
-                    // left: false,
-                    // right: false
-                })
-            }
-        }
-
-    })
+    });
 
     return (
-        <group>
-
-            {debug && <mesh
-                ref={ref}
-                // {...props}
-                // position={position}
-                material={material}
-            >
-                <sphereGeometry args={[0.5, 32, 32]} />
-    
-            </mesh>}
-
-            <group ref={playerModelRef}>
-                <ModelKingMen
-                    scale={3}
-                    rotation={[
-                        0, 
-                        lastMove == "Right" ? degToRad(90) : degToRad(-90),
-                        0
-                    ]}
-                    position={[0, -0.5, 0]}
-                />
-            </group>
-
-        </group>
-    )
+        <RigidBody
+            ref={rigidBodyRef}
+            position={[0, 2, 0]}
+            colliders={false}
+            lockRotations
+            ccd
+            userData={playerUserData}
+        >
+            <CapsuleCollider
+                ref={colliderRef}
+                args={[CAPSULE_HALF_HEIGHT, CAPSULE_RADIUS]}
+                position={[0, CAPSULE_HALF_HEIGHT, 0]}
+                mass={1}
+                friction={0.3}
+                restitution={0}
+                collisionGroups={playerDisabled ? 0 : 0xffffffff}
+            />
+            {debug && (
+                <mesh position={[0, CAPSULE_HALF_HEIGHT, 0]}>
+                    <capsuleGeometry args={[CAPSULE_RADIUS, CAPSULE_HALF_HEIGHT * 2, 8, 16]} />
+                    <meshStandardMaterial
+                        color="red"
+                        wireframe
+                    />
+                </mesh>
+            )}
+            <ModelKingMen
+                scale={3}
+                rotation={[0, lastMove === "Right" ? degToRad(90) : degToRad(-90), 0]}
+                position={[0, -0.5, 0]}
+            />
+        </RigidBody>
+    );
 }
 
-export default PlayerBase
+export default PlayerBase;

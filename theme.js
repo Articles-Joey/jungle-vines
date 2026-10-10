@@ -11,7 +11,7 @@ const roboto = Roboto({
 });
 
 export function createAppTheme(mode = "dark") {
-    const cardBackground = "#26491f";
+    const cardBackground = mode === "dark" ? "#26491f" : "#57af46";
 
     return createTheme({
         cssVariables: true,
@@ -45,8 +45,8 @@ export function createAppTheme(mode = "dark") {
                     ...bootstrapCompatibilityTheme.MuiCssBaseline.styleOverrides(muiTheme),
                     ":root": {
                         "--card-background-override": cardBackground,
-                        "--articles-card-font-color": "#fff",
-                        "--articles-button-background-color": mode === "dark" ? "#524219" : "#9f8132",
+                        // "--articles-card-font-color": "#fff",
+                        "--articles-button-background-color": mode === "dark" ? "#524219" : "#b99436",
                         "--articles-button-color": mode === "dark" ? "#fff" : "#212529",
                     },
                     ".stats-overlay": {

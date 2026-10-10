@@ -1,9 +1,9 @@
-import { createContext, createRef, forwardRef, memo, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, Suspense } from "react";
 
-import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { Sky, useDetectGPU, useTexture, OrbitControls, Cylinder, QuadraticBezierLine, Text, Image } from "@react-three/drei";
+import { Canvas } from "@react-three/fiber"
+import { Sky, OrbitControls, Stats, Image } from "@react-three/drei";
 
-import { Debug, Physics, useBox, useCylinder, useSphere } from "@react-three/cannon";
+import { Physics } from "@react-three/rapier";
 
 import Player from "./Player";
 import WaterPlane from "./WaterPlane";
@@ -136,10 +136,11 @@ function GameCanvas({
                 // position={[20, 10, 0]}
             /> */}
 
-            <Physics>
-
-                <Debug
-                    scale={debug ? 1 : 0}
+            <Suspense fallback={null}>
+                <Physics
+                    gravity={[0, -9.81, 0]}
+                    debug={debug}
+                    colliders={false}
                 >
 
                     <ProcedurallyGeneratedMapElements
@@ -149,7 +150,6 @@ function GameCanvas({
                         startPosition={[3, 10, 0]}
                     />
 
-                    {/* Needs rapier, hard with cannon */}
                     {/* <MovingPlatform
                         position={[-20, 5, 0]}
                         args={[5, 1, 5]}
@@ -270,9 +270,8 @@ function GameCanvas({
                         color={"green"}
                     />
 
-                </Debug>
-
-            </Physics>
+                </Physics>
+            </Suspense>
 
         </Canvas>
     )

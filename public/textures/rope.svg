@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="strand" x1="0" y1="0" x2="64" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b38b57" />
+      <stop offset="0.2" stop-color="#cba674" />
+      <stop offset="0.48" stop-color="#d8b788" />
+      <stop offset="0.72" stop-color="#c8a16d" />
+      <stop offset="1" stop-color="#b38b57" />
+    </linearGradient>
+    <pattern id="twisted-fibers" width="64" height="64" patternUnits="userSpaceOnUse" patternTransform="matrix(1 -0.5 0 1 0 0)">
+      <path fill="url(#strand)" d="M0 0h64v64H0z" />
+      <g fill="none" stroke="#f3d5a6" stroke-width="0.85" opacity="0.6">
+        <path d="M2 0C1 16 3 48 2 64M7 0C8 20 6 44 7 64M13 0C12 18 14 46 13 64M18 0C19 22 17 42 18 64M23 0C22 16 24 48 23 64M29 0C30 20 28 44 29 64M34 0C33 18 35 46 34 64M39 0C40 22 38 42 39 64M45 0C44 16 46 48 45 64M50 0C51 20 49 44 50 64M55 0C54 18 56 46 55 64M61 0C62 22 60 42 61 64" />
+      </g>
+      <g fill="none" stroke="#7e5a34" stroke-width="0.65" opacity="0.45">
+        <path d="M4 0C5 20 3 44 4 64M10 0C9 18 11 46 10 64M15 0C16 22 14 42 15 64M21 0C20 16 22 48 21 64M26 0C27 20 25 44 26 64M31 0C30 18 32 46 31 64M37 0C38 22 36 42 37 64M42 0C41 16 43 48 42 64M47 0C48 20 46 44 47 64M53 0C52 18 54 46 53 64M58 0C59 22 57 42 58 64" />
+      </g>
+      <g fill="none" stroke="#fce6be" stroke-width="0.55" stroke-linecap="round" opacity="0.7">
+        <path d="M6 4q2 5 0 11M16 22q-2 7 0 13M25 7q2 6 0 14M36 40q-2 7 0 17M44 18q2 4 0 11M54 42q-2 6 0 14M60 7q2 7 0 14" />
+      </g>
+      <g fill="none" stroke="#8e6a3f" stroke-width="0.5" stroke-linecap="round" opacity="0.4">
+        <path d="M9 30q-1 7 1 14M20 46q1 5-1 11M32 5q-1 6 1 13M41 31q1 5-1 12M57 23q-1 5 1 12" />
+      </g>
+    </pattern>
+  </defs>
+  <path fill="url(#twisted-fibers)" d="M0 0h256v256H0z" />
+</svg>
