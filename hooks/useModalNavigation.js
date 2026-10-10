@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 export const useModalNavigation = (elementsRef, onClose) => {
     const lastInputTime = useRef(0);
@@ -23,9 +23,9 @@ export const useModalNavigation = (elementsRef, onClose) => {
 
                     // D-Pad
                     if (buttons[12].pressed) dy = -1; // Up
-                    if (buttons[13].pressed) dy = 1;  // Down
+                    if (buttons[13].pressed) dy = 1; // Down
                     if (buttons[14].pressed) dx = -1; // Left
-                    if (buttons[15].pressed) dx = 1;  // Right
+                    if (buttons[15].pressed) dx = 1; // Right
 
                     // Left Stick
                     if (axes[1] < -threshold) dy = -1;
@@ -58,12 +58,14 @@ export const useModalNavigation = (elementsRef, onClose) => {
         };
 
         const navigate = (dx, dy) => {
-            const els = elementsRef.current.filter(el => el && !el.disabled && el.offsetParent !== null);
-            
+            const els = elementsRef.current.filter(
+                (el) => el && !el.disabled && el.offsetParent !== null,
+            );
+
             if (els.length === 0) return;
 
             let currIndex = els.indexOf(document.activeElement);
-            
+
             if (currIndex === -1) {
                 els[0].focus();
                 return;
@@ -83,9 +85,11 @@ export const useModalNavigation = (elementsRef, onClose) => {
         };
 
         // Focus first element on mount if nothing focused
-        const els = elementsRef.current.filter(el => el && !el.disabled && el.offsetParent !== null);
+        const els = elementsRef.current.filter(
+            (el) => el && !el.disabled && el.offsetParent !== null,
+        );
         if (els.length > 0 && !els.includes(document.activeElement)) {
-             els[0].focus();
+            els[0].focus();
         }
 
         animationFrameId = requestAnimationFrame(loop);

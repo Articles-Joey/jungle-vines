@@ -24,14 +24,19 @@ function RopeEnemy({ position, args, swingSpeed, swingPhase, swingAmplitude }) {
 
     const climbSpeed = useMemo(() => {
         const s = Number(seed) || 0;
-        const rand = Math.abs(Math.sin(s + position[0] * 12.9898 + position[1] * 78.233));
+        const rand = Math.abs(
+            Math.sin(s + position[0] * 12.9898 + position[1] * 78.233),
+        );
         return 0.2 + rand * 0.8;
     }, [seed, position]);
     const climbRange = args[2] / 2;
 
     const handlePlayerContact = ({ other }) => {
         const state = useGameStore.getState();
-        if (other.rigidBodyObject?.userData?.tag === "player" && state.attachedRope) {
+        if (
+            other.rigidBodyObject?.userData?.tag === "player" &&
+            state.attachedRope
+        ) {
             state.setPlayerDisabled(true);
             state.setAttachedRope(null);
         }
@@ -47,8 +52,13 @@ function RopeEnemy({ position, args, swingSpeed, swingPhase, swingAmplitude }) {
 
         const time = clock.elapsedTime;
         const angle = Math.sin(time * swingSpeed + swingPhase) * swingAmplitude;
-        const climbPosition = -climbRange + Math.sin(time * climbSpeed) * climbRange;
-        offset.set(-climbPosition * Math.sin(angle), climbPosition * Math.cos(angle), 0);
+        const climbPosition =
+            -climbRange + Math.sin(time * climbSpeed) * climbRange;
+        offset.set(
+            -climbPosition * Math.sin(angle),
+            climbPosition * Math.cos(angle),
+            0,
+        );
         offset.applyQuaternion(initialRotation.current).add(pivot);
         body.setNextKinematicTranslation(offset);
     });
@@ -87,11 +97,14 @@ export default function RopeSwing({
     const swingRotation = useMemo(() => new Quaternion(), []);
     const nextRotation = useMemo(() => new Quaternion(), []);
 
-    const { swingSpeed, swingPhase, hasEnemy } = useMemo(() => ({
-        swingSpeed: propSwingSpeed ?? (1.5 + Math.random()),
-        swingPhase: propSwingPhase ?? (Math.random() * Math.PI * 2),
-        hasEnemy: propHasEnemy ?? (Math.random() > 0.5),
-    }), [propSwingSpeed, propSwingPhase, propHasEnemy]);
+    const { swingSpeed, swingPhase, hasEnemy } = useMemo(
+        () => ({
+            swingSpeed: propSwingSpeed ?? 1.5 + Math.random(),
+            swingPhase: propSwingPhase ?? Math.random() * Math.PI * 2,
+            hasEnemy: propHasEnemy ?? Math.random() > 0.5,
+        }),
+        [propSwingSpeed, propSwingPhase, propHasEnemy],
+    );
     const swingAmplitude = Math.PI / 6;
     const ropeRadius = Math.max(args[0], args[1]) * 2;
 
@@ -114,13 +127,16 @@ export default function RopeSwing({
             state.attachedRope ||
             state.playerDisabled ||
             Date.now() - state.lastRopeDetachTime < 200
-        ) return;
+        )
+            return;
 
         const pivot = ropeBody.translation();
         state.setAttachedRope({
             ropeBody,
             position: [pivot.x, pivot.y, pivot.z],
-            rotation: initialRotation.current?.clone() ?? new Quaternion().copy(ropeBody.rotation()),
+            rotation:
+                initialRotation.current?.clone() ??
+                new Quaternion().copy(ropeBody.rotation()),
             swingSpeed,
             swingPhase,
             swingAmplitude,
@@ -135,7 +151,9 @@ export default function RopeSwing({
         if (!initialRotation.current) {
             initialRotation.current = new Quaternion().copy(body.rotation());
         }
-        const angle = Math.sin(clock.elapsedTime * swingSpeed + swingPhase) * swingAmplitude;
+        const angle =
+            Math.sin(clock.elapsedTime * swingSpeed + swingPhase) *
+            swingAmplitude;
         swingRotation.setFromAxisAngle(swingAxis, angle);
         nextRotation.copy(initialRotation.current).multiply(swingRotation);
         body.setNextKinematicRotation(nextRotation);

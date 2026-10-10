@@ -1,33 +1,31 @@
-"use client"
-import { Suspense } from 'react';
-import packageInfo from '@/package.json';
+"use client";
+import { Suspense } from "react";
+import packageInfo from "@/package.json";
 
-import GlobalBody from '@articles-media/articles-dev-box/GlobalBody';
+import GlobalBody from "@articles-media/articles-dev-box/GlobalBody";
 
-import { useStore } from '@/hooks/useStore';
+import { useStore } from "@/hooks/useStore";
 
-import GlobalClientModals from '@articles-media/articles-dev-box/GlobalClientModals';
+import GlobalClientModals from "@articles-media/articles-dev-box/GlobalClientModals";
 import DarkModeHandler from "@articles-media/articles-dev-box/DarkModeHandler";
-import ToontownModeHandler from '@articles-media/articles-dev-box/ToontownModeHandler';
-import { useAudioStore } from '@/hooks/useAudioStore';
-import useTouchControlsStore from '@/hooks/useTouchControlsStore';
-import { useSocketStore } from '@/hooks/useSocketStore';
-import { useHotkeys } from 'react-hotkeys-hook';
-import HotkeyHandler from '@articles-media/articles-dev-box/HotkeyHandler';
+import ToontownModeHandler from "@articles-media/articles-dev-box/ToontownModeHandler";
+import { useAudioStore } from "@/hooks/useAudioStore";
+import useTouchControlsStore from "@/hooks/useTouchControlsStore";
+import { useSocketStore } from "@/hooks/useSocketStore";
+import { useHotkeys } from "react-hotkeys-hook";
+import HotkeyHandler from "@articles-media/articles-dev-box/HotkeyHandler";
 
 export default function LayoutClient() {
-
     return (
         <>
             <GlobalBody />
-            <DarkModeHandler
-                useStore={useStore}
-            />
-            <ToontownModeHandler 
-                useStore={useStore}
-            />
+            <DarkModeHandler useStore={useStore} />
+            <ToontownModeHandler useStore={useStore} />
             <Suspense>
-                <HotkeyHandler useStore={useStore} useHotkeys={useHotkeys} />
+                <HotkeyHandler
+                    useStore={useStore}
+                    useHotkeys={useHotkeys}
+                />
                 <GlobalClientModals
                     useStore={useStore}
                     useAudioStore={useAudioStore}
@@ -37,23 +35,38 @@ export default function LayoutClient() {
                     packageInfo={packageInfo}
                     settingsModalConfig={{
                         tabs: {
-                            'Graphics': {
+                            Graphics: {
                                 darkMode: true,
-                                landingAnimation: true
+                                landingAnimation: true,
                             },
-                            'Audio': {
+                            Audio: {
                                 sliders: [
-                                    ...useAudioStore.getState().audioSettings ?
-                                        Object.keys(useAudioStore.getState().audioSettings).filter(key => key !== "enabled").map(key => ({
-                                            key,
-                                            label: key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-                                        }))
-                                        :
-                                        [],
-                                ]
+                                    ...(useAudioStore.getState().audioSettings
+                                        ? Object.keys(
+                                              useAudioStore.getState()
+                                                  .audioSettings,
+                                          )
+                                              .filter(
+                                                  (key) => key !== "enabled",
+                                              )
+                                              .map((key) => ({
+                                                  key,
+                                                  label: key
+                                                      .split("_")
+                                                      .map(
+                                                          (word) =>
+                                                              word
+                                                                  .charAt(0)
+                                                                  .toUpperCase() +
+                                                              word.slice(1),
+                                                      )
+                                                      .join(" "),
+                                              }))
+                                        : []),
+                                ],
                             },
-                            'Controls': {
-                                touchControls: true
+                            Controls: {
+                                touchControls: true,
                                 // defaultKeyBindings: {
                                 //     // moveUp: "W",
                                 //     // moveDown: "S",
@@ -61,22 +74,20 @@ export default function LayoutClient() {
                                 //     // moveRight: "D",
                                 // }
                             },
-                            'Multiplayer': {
+                            Multiplayer: {
                                 serverUrl: true,
                             },
-                            'Other': {
+                            Other: {
                                 toontownMode: true,
                             },
-                            'Debug': {
+                            Debug: {
                                 showStats: true,
-                                children: <>
-
-                                </>,
-                            }
+                                children: <></>,
+                            },
                         },
                         reset: () => {
                             useAudioStore.getState().resetAudioSettings();
-                        }
+                        },
                     }}
                     infoModalConfig={{
                         previewImage: "img/preview.webp",

@@ -14,8 +14,17 @@ export default function IsDev({ className, noOutline, children, inline, sx }) {
     if (children && userReduxState?.roles?.isDev && isMounted) {
         return (
             <Box
-                className={["is-dev-content", noOutline ? "no-outline" : "", className].filter(Boolean).join(" ")}
-                sx={[{ display: inline ? "inline-block" : "block" }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}
+                className={[
+                    "is-dev-content",
+                    noOutline ? "no-outline" : "",
+                    className,
+                ]
+                    .filter(Boolean)
+                    .join(" ")}
+                sx={[
+                    { display: inline ? "inline-block" : "block" },
+                    ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+                ]}
             >
                 {children}
             </Box>

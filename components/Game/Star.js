@@ -9,7 +9,11 @@ export default function Star({ position, value }) {
     const increaseScore = useGameStore((state) => state.increaseScore);
 
     const handlePlayerContact = ({ other }) => {
-        if (collectedRef.current || other.rigidBodyObject?.userData?.tag !== "player") return;
+        if (
+            collectedRef.current ||
+            other.rigidBodyObject?.userData?.tag !== "player"
+        )
+            return;
         collectedRef.current = true;
         setCollected(true);
         increaseScore(value);

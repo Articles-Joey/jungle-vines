@@ -11,7 +11,9 @@ import LeftPanelContent from "@/components/Game/LeftPanel";
 import { useSocketStore } from "@/hooks/useSocketStore";
 import { useStore } from "@/hooks/useStore";
 
-const GameCanvas = dynamic(() => import("@/components/Game/GameCanvas"), { ssr: false });
+const GameCanvas = dynamic(() => import("@/components/Game/GameCanvas"), {
+    ssr: false,
+});
 
 export default function GamePage() {
     const socket = useSocketStore((state) => state.socket);
@@ -35,11 +37,14 @@ export default function GamePage() {
 
     return (
         <Box
-            className={classNames(`${process.env.NEXT_PUBLIC_GAME_KEY}-game-page`, {
-                "menu-open": showMenu,
-                fullscreen: isFullscreen,
-                "show-sidebar": sidebar,
-            })}
+            className={classNames(
+                `${process.env.NEXT_PUBLIC_GAME_KEY}-game-page`,
+                {
+                    "menu-open": showMenu,
+                    fullscreen: isFullscreen,
+                    "show-sidebar": sidebar,
+                },
+            )}
             id={`${process.env.NEXT_PUBLIC_GAME_KEY}-game-page`}
             sx={{
                 position: "relative",
@@ -51,7 +56,10 @@ export default function GamePage() {
                     width: "100%",
                     zIndex: 0,
                     overflow: "hidden",
-                    "& img": { filter: "blur(2px) brightness(0.8)", transform: "scale(1.05)" },
+                    "& img": {
+                        filter: "blur(2px) brightness(0.8)",
+                        transform: "scale(1.05)",
+                    },
                 },
                 "& .container": { position: "relative", zIndex: 1 },
                 "& .touch-controls-area": {
@@ -73,14 +81,21 @@ export default function GamePage() {
                     flexShrink: 0,
                     "& .card, & .MuiCard-root": { height: "100%" },
                 },
-                "& .game": { p: "0.5rem 1rem", display: "flex", justifyContent: "center" },
+                "& .game": {
+                    p: "0.5rem 1rem",
+                    display: "flex",
+                    justifyContent: "center",
+                },
                 "& .game-panel": { width: "100%" },
             }}
         >
             <GameMenu
                 useStore={useStore}
                 LeftPanelContent={LeftPanelContent}
-                menuBarConfig={{ style: "Corner Button", menuBarButtonPosition: "Left" }}
+                menuBarConfig={{
+                    style: "Corner Button",
+                    menuBarButtonPosition: "Left",
+                }}
                 sidebarConfig={{ style: "Static Panel" }}
             />
             <Box

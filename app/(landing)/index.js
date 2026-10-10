@@ -94,7 +94,10 @@ export default function LobbyPage() {
                     height: "100%",
                     zIndex: -1,
                     "& img": {
-                        filter: darkMode === false ? "blur(5px)" : "blur(5px) brightness(0.5) !important",
+                        filter:
+                            darkMode === false
+                                ? "blur(5px)"
+                                : "blur(5px) brightness(0.5) !important",
                         transform: "scale(1.05)",
                         objectFit: "cover",
                     },
@@ -104,15 +107,24 @@ export default function LobbyPage() {
             <Suspense>
                 <Box data-hide-in-screenshot-mode="true">
                     <PieMenu
-                        options={pieOptions.map(({ label, Icon, callback }) => ({
-                            label: (
-                                <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-                                    <Icon fontSize="small" />
-                                    {label}
-                                </Box>
-                            ),
-                            callback,
-                        }))}
+                        options={pieOptions.map(
+                            ({ label, Icon, callback }) => ({
+                                label: (
+                                    <Box
+                                        component="span"
+                                        sx={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: 0.5,
+                                        }}
+                                    >
+                                        <Icon fontSize="small" />
+                                        {label}
+                                    </Box>
+                                ),
+                                callback,
+                            }),
+                        )}
                         onFinish={(event) => event.callback?.()}
                     />
                 </Box>
@@ -126,8 +138,20 @@ export default function LobbyPage() {
                 LandingBackgroundAnimation={<LandingBackgroundAnimation />}
                 heroOverride={
                     <Box className="hero">
-                        <Box sx={{ display: "flex", justifyContent: "center", mb: 0 }}>
-                            <Box component="img" className="hero-icon" src="/img/icon.png" alt="Jungle Vines" sx={{ maxWidth: "100%" }} />
+                        <Box
+                            sx={{
+                                display: "flex",
+                                justifyContent: "center",
+                                mb: 0,
+                            }}
+                        >
+                            <Box
+                                component="img"
+                                className="hero-icon"
+                                src="/img/icon.png"
+                                alt="Jungle Vines"
+                                sx={{ maxWidth: "100%" }}
+                            />
                         </Box>
                         <Box
                             sx={{
@@ -146,10 +170,24 @@ export default function LobbyPage() {
                         </Box>
                     </Box>
                 }
-                PostHeroContent={maxDistanceTraveled ? <Box sx={{ mb: "1rem" }}><ScoreCard /></Box> : null}
+                PostHeroContent={
+                    maxDistanceTraveled ? (
+                        <Box sx={{ mb: "1rem" }}>
+                            <ScoreCard />
+                        </Box>
+                    ) : null
+                }
                 NicknameInputConfig={{
                     PreComponent: (
-                        <Box component="img" className="panel-bg" src="/img/icon.png" alt="" width={70} height={70} sx={{ mr: "0.5rem" }} />
+                        <Box
+                            component="img"
+                            className="panel-bg"
+                            src="/img/icon.png"
+                            alt=""
+                            width={70}
+                            height={70}
+                            sx={{ mr: "0.5rem" }}
+                        />
                     ),
                 }}
                 backgroundImage="/img/background.webp"

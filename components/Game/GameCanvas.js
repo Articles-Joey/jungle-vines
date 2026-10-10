@@ -1,6 +1,6 @@
 import { memo, Suspense } from "react";
 
-import { Canvas } from "@react-three/fiber"
+import { Canvas } from "@react-three/fiber";
 import { Sky, OrbitControls, Stats, Image } from "@react-three/drei";
 
 import { Physics } from "@react-three/rapier";
@@ -18,42 +18,38 @@ import ProcedurallyGeneratedMapElements from "./ProcedurallyGeneratedMapElements
 import { useStore } from "@/hooks/useStore";
 import BobbingCrocodileField from "./BobbingCrocodileField";
 
-function GameCanvas({
-    landingAnimationMode = false
-}) {
-
-    const debug = useStore(state => state.debug);
-    const showStats = useStore(state => state.showStats);
-    const darkMode = useStore(state => state.darkMode);
-    const toontownMode = useStore(state => state.toontownMode);
+function GameCanvas({ landingAnimationMode = false }) {
+    const debug = useStore((state) => state.debug);
+    const showStats = useStore((state) => state.showStats);
+    const darkMode = useStore((state) => state.darkMode);
+    const toontownMode = useStore((state) => state.toontownMode);
 
     return (
         <Canvas camera={{ position: [0, 10, 30], fov: 50 }}>
-
-            {showStats && <>
-                <Stats className="stats-overlay" />
-            </>}
+            {showStats && (
+                <>
+                    <Stats className="stats-overlay" />
+                </>
+            )}
 
             <OrbitControls
             // autoRotate={gameState?.status == 'In Lobby'}
             />
 
-            {darkMode ?
+            {darkMode ? (
                 <>
                     <ambientLight intensity={3} />
                     <Sky
                         sunPosition={[0, -10, 0]}
-                    // intensity={0.1}
+                        // intensity={0.1}
                     />
                 </>
-                :
+            ) : (
                 <>
                     <ambientLight intensity={3} />
-                    <Sky
-                        sunPosition={[0, 10, 0]}
-                    />
+                    <Sky sunPosition={[0, 10, 0]} />
                 </>
-            }
+            )}
 
             {/* <spotLight intensity={30000} position={[0, -10, 0]} angle={5} penumbra={1} /> */}
 
@@ -66,9 +62,13 @@ function GameCanvas({
             {[...Array(9)].map((_, i) => (
                 <Image
                     key={i}
-                    url={toontownMode ? `img/toon-background.png` : `img/background.webp`}
+                    url={
+                        toontownMode
+                            ? `img/toon-background.png`
+                            : `img/background.webp`
+                    }
                     scale={[50, 50]}
-                    position={[(-100 + (i * 50)), 10, -40]}
+                    position={[-100 + i * 50, 10, -40]}
                     color={darkMode ? "#888888" : "white"}
                 />
             ))}
@@ -99,9 +99,7 @@ function GameCanvas({
                 rotation={[0, degToRad(-90), 0]}
             /> */}
 
-            <WaterPlane
-                position={[0, -15, 0]}
-            />
+            <WaterPlane position={[0, -15, 0]} />
 
             {/* <ModelQuaterniusFishingShark
                 position={[10, -15, 0]}
@@ -142,7 +140,6 @@ function GameCanvas({
                     debug={debug}
                     colliders={false}
                 >
-
                     <ProcedurallyGeneratedMapElements
                         seed={12345}
                         count={20}
@@ -169,9 +166,7 @@ function GameCanvas({
                         color={"green"}
                     />
 
-                    {!landingAnimationMode &&
-                        <Player />
-                    }
+                    {!landingAnimationMode && <Player />}
 
                     {/* <ModelKingMen
                     scale={3}
@@ -221,35 +216,21 @@ function GameCanvas({
                     />
 
                     <RopeSwing
-                        position={[
-                            70,
-                            10,
-                            0
-                        ]}
+                        position={[70, 10, 0]}
                         args={[0.1, 0.1, 15, 8]}
                     />
 
                     <RopeSwing
-                        position={[
-                            80,
-                            10,
-                            0
-                        ]}
+                        position={[80, 10, 0]}
                         args={[0.1, 0.1, 15, 8]}
                     />
 
                     <RopeSwing
-                        position={[
-                            90,
-                            10,
-                            0
-                        ]}
+                        position={[90, 10, 0]}
                         args={[0.1, 0.1, 15, 8]}
                     />
 
-                    <FlyingEnemy
-
-                    />
+                    <FlyingEnemy />
 
                     <MovingPlatform
                         position={[100, 5, 0]}
@@ -269,12 +250,10 @@ function GameCanvas({
                         args={[25, 1, 2.5]}
                         color={"green"}
                     />
-
                 </Physics>
             </Suspense>
-
         </Canvas>
-    )
+    );
 }
 
-export default memo(GameCanvas)
+export default memo(GameCanvas);

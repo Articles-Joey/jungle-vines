@@ -1,12 +1,20 @@
 import { useThree } from "@react-three/fiber";
-import { CuboidCollider, RigidBody, useBeforePhysicsStep, useRapier } from "@react-three/rapier";
+import {
+    CuboidCollider,
+    RigidBody,
+    useBeforePhysicsStep,
+    useRapier,
+} from "@react-three/rapier";
 import { useRef } from "react";
 import { useGameStore } from "@/hooks/useGameStore";
 import { ModelBat } from "../Models/Bat";
 import { degToRad } from "three/src/math/MathUtils";
 import { useStore } from "@/hooks/useStore";
 
-export default function FlyingEnemy({ args = [1, 1, 1], position = [0, 4, 0] }) {
+export default function FlyingEnemy({
+    args = [1, 1, 1],
+    position = [0, 4, 0],
+}) {
     const rigidBodyRef = useRef(null);
     const clock = useThree((state) => state.clock);
     const { rapier } = useRapier();

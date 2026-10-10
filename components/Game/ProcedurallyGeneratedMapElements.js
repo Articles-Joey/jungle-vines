@@ -1,16 +1,15 @@
-import React, { useMemo } from 'react';
-import RopeSwing from './RopeSwing';
-import Star from './Star';
-import { useStore } from '@/hooks/useStore';
+import React, { useMemo } from "react";
+import RopeSwing from "./RopeSwing";
+import Star from "./Star";
+import { useStore } from "@/hooks/useStore";
 
-export default function ProcedurallyGeneratedMapElements({ 
-    // seed = 12345, 
-    count = 10, 
+export default function ProcedurallyGeneratedMapElements({
+    // seed = 12345,
+    count = 10,
     range = [100, 20], // [Total X distance, Y variation range]
-    startPosition = [0, 10, 0] 
+    startPosition = [0, 10, 0],
 }) {
-
-    const seed = useStore(state => state.seed);
+    const seed = useStore((state) => state.seed);
 
     const ropes = useMemo(() => {
         // Simple LCG (Linear Congruential Generator) for deterministic randomness
@@ -27,21 +26,21 @@ export default function ProcedurallyGeneratedMapElements({
         const items = [];
         // Calculate average step size to cover the X range
         const avgStepX = range[0] / count;
-        
+
         let currentX = startPosition[0];
-        
+
         for (let i = 0; i < count; i++) {
             // Move X forward by a random amount around the average step
             // This ensures we cover roughly the range[0] distance but with variation
-            const stepX = avgStepX * (0.5 + random()); 
+            const stepX = avgStepX * (0.5 + random());
             currentX += stepX;
-            
+
             // Calculate Y position
             // Randomly offset from the start Y position within the Y range
             // (random() - 0.5) gives -0.5 to 0.5
             const yOffset = (random() - 0.5) * range[1];
             const currentY = startPosition[1] + yOffset;
-            
+
             // Generate rope properties deterministically
             const hasEnemy = random() > 0.5;
             const swingSpeed = 1.5 + random() * 1;
@@ -51,10 +50,10 @@ export default function ProcedurallyGeneratedMapElements({
                 position: [currentX, currentY, startPosition[2]],
                 hasEnemy,
                 swingSpeed,
-                swingPhase
+                swingPhase,
             });
         }
-        
+
         return items;
     }, [seed, count, range, startPosition]);
 
@@ -74,18 +73,18 @@ export default function ProcedurallyGeneratedMapElements({
         const items = [];
         // Calculate average step size to cover the X range
         const avgStepX = range[0] / count;
-        
+
         let currentX = startPosition[0];
-        
+
         for (let i = 0; i < count; i++) {
             // Move X forward by a random amount around the average step
-            const stepX = avgStepX * (0.5 + random()); 
+            const stepX = avgStepX * (0.5 + random());
             currentX += stepX;
-            
+
             // Calculate Y position
             const yOffset = (random() - 0.5) * range[1];
             const currentY = startPosition[1] + yOffset;
-            
+
             // Generate star value: 1, 5, or 10
             const valRand = random();
             let value = 1;
@@ -94,10 +93,10 @@ export default function ProcedurallyGeneratedMapElements({
 
             items.push({
                 position: [currentX, currentY, startPosition[2]],
-                value
+                value,
             });
         }
-        
+
         return items;
     }, [seed, count, range, startPosition]);
 
@@ -109,7 +108,7 @@ export default function ProcedurallyGeneratedMapElements({
                         <sphereGeometry args={[0.5, 16, 16]} />
                         <meshStandardMaterial color="red" />
                     </mesh>
-                    <RopeSwing 
+                    <RopeSwing
                         position={rope.position}
                         hasEnemy={rope.hasEnemy}
                         swingSpeed={rope.swingSpeed}
@@ -118,12 +117,12 @@ export default function ProcedurallyGeneratedMapElements({
                 </group>
             ))}
             {stars.map((star, i) => (
-                <Star 
-                    key={`star-${i}`} 
-                    position={star.position} 
-                    value={star.value} 
+                <Star
+                    key={`star-${i}`}
+                    position={star.position}
+                    value={star.value}
                 />
             ))}
         </>
-    )
+    );
 }

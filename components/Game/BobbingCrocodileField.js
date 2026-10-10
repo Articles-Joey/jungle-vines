@@ -1,9 +1,9 @@
-import React, { useMemo, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import React, { useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
 
-import { ModelCrocodile } from '../Models/Crocodile';
+import { ModelCrocodile } from "../Models/Crocodile";
 
-import { degToRad } from 'three/src/math/MathUtils';
+import { degToRad } from "three/src/math/MathUtils";
 
 const BobbingCrocodile = ({ position, speed, offset, scale = 0.01 }) => {
     const ref = useRef();
@@ -14,45 +14,53 @@ const BobbingCrocodile = ({ position, speed, offset, scale = 0.01 }) => {
         if (ref.current) {
             // Bobbing motion: sin wave based on time, speed, and random offset
             // Amplitude is set to 1.5, can be adjusted or passed as prop
-            const yOffset = Math.sin(clock.getElapsedTime() * speed + offset) * 1.5;
+            const yOffset =
+                Math.sin(clock.getElapsedTime() * speed + offset) * 1.5;
             ref.current.position.y = initialY + yOffset;
         }
     });
 
     return (
-        <group ref={ref} position={position}>
-            <ModelCrocodile 
-                scale={scale} 
-                rotation={[0, degToRad(-90), 0]} 
+        <group
+            ref={ref}
+            position={position}
+        >
+            <ModelCrocodile
+                scale={scale}
+                rotation={[0, degToRad(-90), 0]}
             />
         </group>
     );
 };
 
-const BobbingCrocodileField = ({ count = 10, range = [100, 0, 20], basePosition = [0, -15, 0] }) => {
+const BobbingCrocodileField = ({
+    count = 10,
+    range = [100, 0, 20],
+    basePosition = [0, -15, 0],
+}) => {
     const crocodiles = useMemo(() => {
         return new Array(count).fill(0).map((_, i) => {
             return {
                 position: [
                     basePosition[0] + (Math.random() - 0.5) * range[0],
                     basePosition[1],
-                    basePosition[2] + (Math.random() - 0.5) * range[2]
+                    basePosition[2] + (Math.random() - 0.5) * range[2],
                 ],
                 speed: 0.5 + Math.random() * 1.5, // Random speed between 0.5 and 2
                 offset: Math.random() * Math.PI * 2, // Random starting phase
-                key: i
+                key: i,
             };
         });
     }, [count, range, basePosition]);
 
     return (
         <>
-            {crocodiles.map(crocodile => (
-                <BobbingCrocodile 
-                    key={crocodile.key} 
-                    position={crocodile.position} 
-                    speed={crocodile.speed} 
-                    offset={crocodile.offset} 
+            {crocodiles.map((crocodile) => (
+                <BobbingCrocodile
+                    key={crocodile.key}
+                    position={crocodile.position}
+                    speed={crocodile.speed}
+                    offset={crocodile.offset}
                 />
             ))}
         </>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 function isJsonString(str) {
     try {
@@ -10,30 +10,25 @@ function isJsonString(str) {
 }
 
 export const useLocalStorageNew = (storageKey, fallbackState) => {
-
     const [value, setValue] = useState(() => {
-
         // Check if localStorage is available
-        if (typeof window !== 'undefined' && window.localStorage) {
-
+        if (typeof window !== "undefined" && window.localStorage) {
             const storedValue = localStorage.getItem(storageKey);
 
             if (isJsonString(storedValue)) {
                 // Do nothing
             } else {
-                return (fallbackState)
+                return fallbackState;
             }
 
-            return storedValue ? JSON.parse(storedValue) : fallbackState || '';
-
+            return storedValue ? JSON.parse(storedValue) : fallbackState || "";
         } else {
             // Handle the case where localStorage is not available
-            return fallbackState || '';
+            return fallbackState || "";
         }
 
         // const storedValue = localStorage.getItem(storageKey);
         // return storedValue ? JSON.parse(storedValue) : fallbackState || '';
-
     });
 
     useEffect(() => {

@@ -21,25 +21,58 @@ export default function LeftPanelContent() {
     const connected = useSocketStore((state) => state.connected);
     const debug = useStore((state) => state.debug);
     const cameraControlMethod = useStore((state) => state.cameraControlMethod);
-    const setCameraControlMethod = useStore((state) => state.setCameraControlMethod);
+    const setCameraControlMethod = useStore(
+        (state) => state.setCameraControlMethod,
+    );
     const server = useSearchParams().get("server");
     const [cameraAnchor, setCameraAnchor] = useState(null);
 
     return (
         <Box sx={{ width: "100%" }}>
-            <Card sx={{ bgcolor: "game.card", color: "#fff", backgroundImage: "none", fontSize: "0.875rem", border: 1, borderColor: "divider" }}>
+            <Card
+                sx={{
+                    bgcolor: "game.card",
+                    color: "#fff",
+                    backgroundImage: "none",
+                    fontSize: "0.875rem",
+                    border: 1,
+                    borderColor: "divider",
+                }}
+            >
                 <CardContent sx={{ p: 1, "&:last-child": { pb: 1 } }}>
                     <Box sx={{ display: "flex", flexWrap: "wrap", mb: "1rem" }}>
-                        <GameMenuPrimaryButtonGroup useStore={useStore} type="GameMenu" useRouter={useRouter} />
+                        <GameMenuPrimaryButtonGroup
+                            useStore={useStore}
+                            type="GameMenu"
+                            useRouter={useRouter}
+                        />
                     </Box>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                        }}
+                    >
                         <Box>Server: {server || "Single player"}</Box>
                         <Box>Players: {0}/4</Box>
                     </Box>
                     {!connected && (
                         <Box>
-                            <Box sx={{ fontSize: "1rem", fontWeight: 500, mb: "0.25rem" }}>Not connected</Box>
-                            <ArticlesButton small onClick={() => socket?.connect()} sx={{ width: "100%", mb: "1rem" }}>
+                            <Box
+                                sx={{
+                                    fontSize: "1rem",
+                                    fontWeight: 500,
+                                    mb: "0.25rem",
+                                }}
+                            >
+                                Not connected
+                            </Box>
+                            <ArticlesButton
+                                small
+                                onClick={() => socket?.connect()}
+                                sx={{ width: "100%", mb: "1rem" }}
+                            >
                                 Reconnect!
                             </ArticlesButton>
                         </Box>
@@ -51,7 +84,9 @@ export default function LeftPanelContent() {
                         aria-haspopup="menu"
                         aria-expanded={cameraAnchor ? "true" : undefined}
                         endIcon={<ArrowDropDownIcon />}
-                        onClick={(event) => setCameraAnchor(event.currentTarget)}
+                        onClick={(event) =>
+                            setCameraAnchor(event.currentTarget)
+                        }
                     >
                         Camera
                     </ArticlesButton>
@@ -60,11 +95,20 @@ export default function LeftPanelContent() {
                         anchorEl={cameraAnchor}
                         open={Boolean(cameraAnchor)}
                         onClose={() => setCameraAnchor(null)}
-                        slotProps={{ list: { "aria-labelledby": "camera-menu-button" } }}
+                        slotProps={{
+                            list: { "aria-labelledby": "camera-menu-button" },
+                        }}
                     >
-                        <Box sx={{ p: "0.5rem" }}>Camera: {cameraControlMethod}</Box>
+                        <Box sx={{ p: "0.5rem" }}>
+                            Camera: {cameraControlMethod}
+                        </Box>
                         <Divider />
-                        {["Side Scroll", "First Person", "Third Person", "Orbit"].map((item) => (
+                        {[
+                            "Side Scroll",
+                            "First Person",
+                            "Third Person",
+                            "Orbit",
+                        ].map((item) => (
                             <MenuItem
                                 key={item}
                                 selected={cameraControlMethod === item}

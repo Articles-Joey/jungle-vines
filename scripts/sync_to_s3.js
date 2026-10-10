@@ -1,5 +1,5 @@
-const { execSync } = require('child_process');
-const path = require('path');
+const { execSync } = require("child_process");
+const path = require("path");
 const game_name = "Jungle Vines";
 
 /**
@@ -12,15 +12,17 @@ const game_name = "Jungle Vines";
  */
 
 // const targetBucket = process.argv[2];
-const targetBucket = `s3://articles-website/games/${game_name}/public/`
+const targetBucket = `s3://articles-website/games/${game_name}/public/`;
 
 if (!targetBucket) {
-    console.error('Error: Please provide a target S3 bucket URI.');
-    console.error('Usage: node scripts/sync_to_s3.js s3://your-bucket-name/path/');
+    console.error("Error: Please provide a target S3 bucket URI.");
+    console.error(
+        "Usage: node scripts/sync_to_s3.js s3://your-bucket-name/path/",
+    );
     process.exit(1);
 }
 
-const publicFolderPath = path.join(__dirname, '..', 'public');
+const publicFolderPath = path.join(__dirname, "..", "public");
 
 console.log(`Syncing ${publicFolderPath} to ${targetBucket} using AWS CLI...`);
 
@@ -31,10 +33,10 @@ try {
 
     console.log(`Running: ${command}`);
 
-    execSync(command, { stdio: 'inherit' });
+    execSync(command, { stdio: "inherit" });
 
-    console.log('Sync completed successfully!');
+    console.log("Sync completed successfully!");
 } catch (error) {
-    console.error('Error during sync:', error.message);
+    console.error("Error during sync:", error.message);
     process.exit(1);
 }

@@ -1,7 +1,6 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
-export default function skinColor (previewConfig, material) {
-    
+export default function skinColor(previewConfig, material) {
     if (previewConfig?.skinColor) {
         return new THREE.MeshStandardMaterial({
             color: previewConfig.skinColor,
@@ -9,5 +8,4 @@ export default function skinColor (previewConfig, material) {
     }
 
     return material;
-
-};
+}

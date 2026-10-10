@@ -1,8 +1,18 @@
 import { useThree } from "@react-three/fiber";
-import { CuboidCollider, RigidBody, useBeforePhysicsStep } from "@react-three/rapier";
+import {
+    CuboidCollider,
+    RigidBody,
+    useBeforePhysicsStep,
+} from "@react-three/rapier";
 import { useRef } from "react";
 
-export default function MovingPlatform({ args = [5, 1, 5], position = [0, 0, 0], range = 5, speed = 2, color = "orange" }) {
+export default function MovingPlatform({
+    args = [5, 1, 5],
+    position = [0, 0, 0],
+    range = 5,
+    speed = 2,
+    color = "orange",
+}) {
     const rigidBodyRef = useRef(null);
     const clock = useThree((state) => state.clock);
 

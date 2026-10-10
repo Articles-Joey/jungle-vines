@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 export default function AudioHandler() {
-
     const pathname = usePathname();
     const audioSettings = useAudioStore((state) => state?.audioSettings);
     const setAudioSettings = useAudioStore((state) => state?.setAudioSettings);
@@ -15,9 +14,9 @@ export default function AudioHandler() {
     const interactedRef = useRef(false);
 
     useEffect(() => {
-        if (typeof window === 'undefined') return;
+        if (typeof window === "undefined") return;
 
-        if (pathname === '/') {
+        if (pathname === "/") {
             if (musicRef.current) {
                 musicRef.current.pause();
             }
@@ -25,7 +24,9 @@ export default function AudioHandler() {
         }
 
         const music = new Audio(`/audio/Jungle Vines.mp3`);
-        music.volume = audioSettings?.enabled ? (audioSettings?.game_volume / 100) : 0;
+        music.volume = audioSettings?.enabled
+            ? audioSettings?.game_volume / 100
+            : 0;
         musicRef.current = music;
 
         music.onended = function () {
@@ -46,11 +47,20 @@ export default function AudioHandler() {
                 music.currentTime = 0;
                 music.play();
             } else {
-                const events = ['click', 'keydown', 'touchstart', 'pointerdown'];
-                events.forEach((e) => document.addEventListener(e, tryPlay, { once: true }));
+                const events = [
+                    "click",
+                    "keydown",
+                    "touchstart",
+                    "pointerdown",
+                ];
+                events.forEach((e) =>
+                    document.addEventListener(e, tryPlay, { once: true }),
+                );
 
                 return () => {
-                    events.forEach((e) => document.removeEventListener(e, tryPlay));
+                    events.forEach((e) =>
+                        document.removeEventListener(e, tryPlay),
+                    );
                     music.pause();
                 };
             }
@@ -62,5 +72,4 @@ export default function AudioHandler() {
     }, [audioSettings, pathname]);
 
     return null;
-
 }

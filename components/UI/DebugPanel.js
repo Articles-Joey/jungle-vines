@@ -14,18 +14,52 @@ export default function DebugPanel() {
     const reloadScene = useStore((state) => state.reloadScene);
 
     return (
-        <Card sx={{ bgcolor: "game.card", color: "#fff", backgroundImage: "none", fontSize: "0.875rem", border: 1, borderColor: "divider" }}>
+        <Card
+            sx={{
+                bgcolor: "game.card",
+                color: "#fff",
+                backgroundImage: "none",
+                fontSize: "0.875rem",
+                border: 1,
+                borderColor: "divider",
+            }}
+        >
             <CardContent sx={{ p: 1, "&:last-child": { pb: 1 } }}>
-                <Box sx={{ fontSize: "0.875em", opacity: 0.75 }}>Debug Controls</Box>
-                <Box sx={{ fontSize: "0.875em", border: 1, borderColor: "divider", p: "0.5rem" }} />
+                <Box sx={{ fontSize: "0.875em", opacity: 0.75 }}>
+                    Debug Controls
+                </Box>
+                <Box
+                    sx={{
+                        fontSize: "0.875em",
+                        border: 1,
+                        borderColor: "divider",
+                        p: "0.5rem",
+                    }}
+                />
                 <Box sx={{ display: "flex", flexWrap: "wrap" }}>
-                    <ArticlesButton small sx={{ width: "50%" }} startIcon={<ReplayIcon />} onClick={() => reloadScene()}>
+                    <ArticlesButton
+                        small
+                        sx={{ width: "50%" }}
+                        startIcon={<ReplayIcon />}
+                        onClick={() => reloadScene()}
+                    >
                         Reload Game
                     </ArticlesButton>
-                    <ArticlesButton small sx={{ width: "50%" }} startIcon={<ReplayIcon />} onClick={() => reloadScene()}>
+                    <ArticlesButton
+                        small
+                        sx={{ width: "50%" }}
+                        startIcon={<ReplayIcon />}
+                        onClick={() => reloadScene()}
+                    >
                         Reset Camera
                     </ArticlesButton>
-                    <ArticlesButton small sx={{ width: "50%" }} startIcon={<CodeIcon />} active={debugMode} onClick={() => setDebugMode(!debugMode)}>
+                    <ArticlesButton
+                        small
+                        sx={{ width: "50%" }}
+                        startIcon={<CodeIcon />}
+                        active={debugMode}
+                        onClick={() => setDebugMode(!debugMode)}
+                    >
                         Debug Mode
                     </ArticlesButton>
                 </Box>

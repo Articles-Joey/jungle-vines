@@ -1,27 +1,26 @@
 // import { create } from 'zustand'
-import { createWithEqualityFn as create } from 'zustand/traditional'
+import { createWithEqualityFn as create } from "zustand/traditional";
 
 export const useGameStore = create((set) => ({
-
-    cameraMode: 'Player',
+    cameraMode: "Player",
     setCameraMode: (newValue) => {
         set((prev) => ({
-            cameraMode: newValue
-        }))
+            cameraMode: newValue,
+        }));
     },
 
     playerLocation: false,
     setPlayerLocation: (newValue) => {
         set((prev) => ({
-            playerLocation: newValue
-        }))
+            playerLocation: newValue,
+        }));
     },
 
     playerDisabled: false,
     setPlayerDisabled: (newValue) => {
         set((prev) => ({
-            playerDisabled: newValue
-        }))
+            playerDisabled: newValue,
+        }));
     },
 
     // maxHeight: 0,
@@ -34,73 +33,71 @@ export const useGameStore = create((set) => ({
     shift: false,
     setShift: (newValue) => {
         set((prev) => ({
-            shift: newValue
-        }))
+            shift: newValue,
+        }));
     },
 
     touchControls: {
         jump: false,
         left: false,
-        right: false
+        right: false,
     },
     setTouchControls: (newValue) => {
         set((prev) => ({
-            touchControls: newValue
-        }))
+            touchControls: newValue,
+        }));
     },
 
     teleport: false,
     setTeleport: (newValue) => {
         set((prev) => ({
-            teleport: newValue
-        }))
+            teleport: newValue,
+        }));
     },
 
     attachedRope: null,
     setAttachedRope: (newValue) => {
         set((prev) => ({
-            attachedRope: newValue
-        }))
+            attachedRope: newValue,
+        }));
     },
 
     lastRopeDetachTime: 0,
     setLastRopeDetachTime: (newValue) => {
         set((prev) => ({
-            lastRopeDetachTime: newValue
-        }))
+            lastRopeDetachTime: newValue,
+        }));
     },
 
     gameState: {},
     setGameState: (newValue) => {
         set((prev) => ({
-            gameState: newValue
-        }))
+            gameState: newValue,
+        }));
     },
 
     score: 0,
     setScore: (newValue) => {
         set((prev) => ({
-            score: newValue
-        }))
+            score: newValue,
+        }));
     },
     increaseScore: (amount) => {
         set((prev) => ({
-            score: prev.score + amount
-        }))
+            score: prev.score + amount,
+        }));
     },
-}))
+}));
 
 export const useControlsStore = create((set) => ({
-
     touchControls: {
         jump: false,
         left: false,
-        right: false
+        right: false,
     },
     setTouchControls: (newValue) => {
         set((prev) => ({
-            touchControls: newValue
-        }))
-    }
-
-}))
+            touchControls: newValue,
+        }));
+    },
+}));

@@ -1,60 +1,58 @@
 // import { create } from 'zustand'
-import { createWithEqualityFn as create } from 'zustand/traditional'
+import { createWithEqualityFn as create } from "zustand/traditional";
 
 export const usePlayersStore = create((set) => ({
-
     players: [],
     setPlayers: (newValue) => {
         set((prev) => ({
-            players: newValue
-        }))
+            players: newValue,
+        }));
     },
     winner: false,
     setWinner: (newValue) => {
         set((prev) => ({
-            winner: newValue
-        }))
+            winner: newValue,
+        }));
     },
     setPlayer: (player_id, newValue) => {
         set((prev) => ({
-            players: prev.players.map(player => 
-                player.player_index === player_id ? { ...player, ...newValue } : player
-            )
-        }))
+            players: prev.players.map((player) =>
+                player.player_index === player_id
+                    ? { ...player, ...newValue }
+                    : player,
+            ),
+        }));
     },
     populatePlayers: (newValue) => {
-
         let newPlayers = Array.from({ length: 25 }, (player_obj, player_i) => {
             return {
                 ...(player_i == 0 && {
-                    realPlayer: true
+                    realPlayer: true,
                 }),
                 player_index: player_i,
                 x: 0,
-                y: (player_i * 3)
+                y: player_i * 3,
             };
         });
 
-        console.log("newPlayers", newPlayers)
+        console.log("newPlayers", newPlayers);
 
         set((prev) => ({
-            players: newPlayers
-        }))
-
+            players: newPlayers,
+        }));
     },
 
     serverGameState: {},
     setServerGameState: (newValue) => {
         set((prev) => ({
-            serverGameState: newValue
-        }))
+            serverGameState: newValue,
+        }));
     },
 
     serverRoomPlayers: [],
     setServerRoomPlayers: (newValue) => {
         set((prev) => ({
-            serverRoomPlayers: newValue
-        }))
+            serverRoomPlayers: newValue,
+        }));
     },
-
-}))
+}));

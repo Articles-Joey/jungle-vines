@@ -1,5 +1,10 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import { CapsuleCollider, RigidBody, useBeforePhysicsStep, useRapier } from "@react-three/rapier";
+import {
+    CapsuleCollider,
+    RigidBody,
+    useBeforePhysicsStep,
+    useRapier,
+} from "@react-three/rapier";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Vector3 } from "three";
 import { useKeyboard } from "@/hooks/useKeyboard";
@@ -32,7 +37,8 @@ function PlayerBase() {
     const playerDisabled = useGameStore((state) => state.playerDisabled);
     const cameraControlMethod = useStore((state) => state.cameraControlMethod);
     const debug = useStore((state) => state.debug);
-    const { moveBackward, moveForward, moveRight, moveLeft, jump } = useKeyboard();
+    const { moveBackward, moveForward, moveRight, moveLeft, jump } =
+        useKeyboard();
     const [lastMove, setLastMove] = useState("Right");
 
     useEffect(() => {
@@ -100,29 +106,45 @@ function PlayerBase() {
                     playerPosition.z - rope.position[2],
                 );
                 ropeOffset.applyQuaternion(rope.rotation.clone().invert());
-                const angle = Math.sin(clock.elapsedTime * rope.swingSpeed + rope.swingPhase) * rope.swingAmplitude;
+                const angle =
+                    Math.sin(
+                        clock.elapsedTime * rope.swingSpeed + rope.swingPhase,
+                    ) * rope.swingAmplitude;
                 ropeOffset.applyAxisAngle(swingAxis, -angle);
-                ropeHeight.current = Math.max(1, Math.min(-ropeOffset.y, rope.length));
+                ropeHeight.current = Math.max(
+                    1,
+                    Math.min(-ropeOffset.y, rope.length),
+                );
                 body.setLinvel({ x: 0, y: 0, z: 0 }, true);
             }
             previousRope.current = rope;
 
             const climbSpeed = 6;
             const previousHeight = ropeHeight.current;
-            const climbDirection = (moveBackward ? 1 : 0) - (moveForward ? 1 : 0);
+            const climbDirection =
+                (moveBackward ? 1 : 0) - (moveForward ? 1 : 0);
             ropeHeight.current = Math.max(
                 1,
-                Math.min(previousHeight + climbDirection * climbSpeed * world.timestep, rope.length),
+                Math.min(
+                    previousHeight +
+                        climbDirection * climbSpeed * world.timestep,
+                    rope.length,
+                ),
             );
-            const climbVelocity = (ropeHeight.current - previousHeight) / world.timestep;
+            const climbVelocity =
+                (ropeHeight.current - previousHeight) / world.timestep;
             const time = clock.elapsedTime;
-            const angle = Math.sin(time * rope.swingSpeed + rope.swingPhase) * rope.swingAmplitude;
+            const angle =
+                Math.sin(time * rope.swingSpeed + rope.swingPhase) *
+                rope.swingAmplitude;
 
-            ropeOffset.set(
-                ropeHeight.current * Math.sin(angle),
-                -ropeHeight.current * Math.cos(angle),
-                0,
-            ).applyQuaternion(rope.rotation);
+            ropeOffset
+                .set(
+                    ropeHeight.current * Math.sin(angle),
+                    -ropeHeight.current * Math.cos(angle),
+                    0,
+                )
+                .applyQuaternion(rope.rotation);
             const nextPosition = {
                 x: rope.position[0] + ropeOffset.x,
                 // The player stays upright; place its capsule center on the rope.
@@ -131,13 +153,19 @@ function PlayerBase() {
             };
 
             if (jump || touchControls.jump) {
-                const thetaDot = rope.swingAmplitude * rope.swingSpeed *
+                const thetaDot =
+                    rope.swingAmplitude *
+                    rope.swingSpeed *
                     Math.cos(time * rope.swingSpeed + rope.swingPhase);
-                launchVelocity.set(
-                    ropeHeight.current * Math.cos(angle) * thetaDot + climbVelocity * Math.sin(angle),
-                    ropeHeight.current * Math.sin(angle) * thetaDot - climbVelocity * Math.cos(angle),
-                    0,
-                ).applyQuaternion(rope.rotation);
+                launchVelocity
+                    .set(
+                        ropeHeight.current * Math.cos(angle) * thetaDot +
+                            climbVelocity * Math.sin(angle),
+                        ropeHeight.current * Math.sin(angle) * thetaDot -
+                            climbVelocity * Math.cos(angle),
+                        0,
+                    )
+                    .applyQuaternion(rope.rotation);
                 launchVelocity.y += JUMP_FORCE;
 
                 // Switch immediately so Rapier integrates the release velocity
@@ -158,20 +186,23 @@ function PlayerBase() {
         }
 
         previousRope.current = null;
-        const direction = (
+        const direction =
             (moveRight || touchControls.right ? 1 : 0) -
-            (moveLeft || touchControls.left ? 1 : 0)
-        ) || controllerX;
+                (moveLeft || touchControls.left ? 1 : 0) || controllerX;
         if (direction > 0) setLastMove("Right");
         if (direction < 0) setLastMove("Left");
 
         const velocity = body.linvel();
-        const shouldJump = (jump || touchControls.jump) && Math.abs(velocity.y) < 0.05;
-        body.setLinvel({
-            x: direction * SPEED * (state.shift ? 2 : 1),
-            y: shouldJump ? JUMP_FORCE : velocity.y,
-            z: 0,
-        }, true);
+        const shouldJump =
+            (jump || touchControls.jump) && Math.abs(velocity.y) < 0.05;
+        body.setLinvel(
+            {
+                x: direction * SPEED * (state.shift ? 2 : 1),
+                y: shouldJump ? JUMP_FORCE : velocity.y,
+                z: 0,
+            },
+            true,
+        );
         if (shouldJump && touchControls.jump) {
             setTouchControls({ ...touchControls, jump: false });
         }
@@ -230,7 +261,9 @@ function PlayerBase() {
             />
             {debug && (
                 <mesh position={[0, CAPSULE_HALF_HEIGHT, 0]}>
-                    <capsuleGeometry args={[CAPSULE_RADIUS, CAPSULE_HALF_HEIGHT * 2, 8, 16]} />
+                    <capsuleGeometry
+                        args={[CAPSULE_RADIUS, CAPSULE_HALF_HEIGHT * 2, 8, 16]}
+                    />
                     <meshStandardMaterial
                         color="red"
                         wireframe
@@ -239,7 +272,11 @@ function PlayerBase() {
             )}
             <ModelKingMen
                 scale={3}
-                rotation={[0, lastMove === "Right" ? degToRad(90) : degToRad(-90), 0]}
+                rotation={[
+                    0,
+                    lastMove === "Right" ? degToRad(90) : degToRad(-90),
+                    0,
+                ]}
                 position={[0, -0.5, 0]}
             />
         </RigidBody>
