@@ -1,12 +1,14 @@
-import { memo, Suspense } from "react";
+import { memo, Suspense, useEffect, useRef } from "react";
 
-import { Canvas } from "@react-three/fiber";
-import { Sky, OrbitControls, Stats, Image } from "@react-three/drei";
+import { Canvas, useThree } from "@react-three/fiber";
+import { OrbitControls, Stats, Image } from "@react-three/drei";
 
 import { Physics } from "@react-three/rapier";
 
 import Player from "./Player";
 import WaterPlane from "./WaterPlane";
+import TerrainBank from "./TerrainBank";
+import SceneLighting from "./SceneLighting";
 
 import FlyingEnemy from "./FlyingEnemy";
 import RopeSwing from "./RopeSwing";
@@ -16,42 +18,73 @@ import MovingPlatform from "./MovingPlatform";
 import BobbingSharkField from "./BobbingSharkField";
 import ProcedurallyGeneratedMapElements from "./ProcedurallyGeneratedMapElements";
 import { useStore } from "@/hooks/useStore";
+import { useGameStore } from "@/hooks/useGameStore";
 import BobbingCrocodileField from "./BobbingCrocodileField";
 
-function GameCanvas({ landingAnimationMode = false }) {
-    const debug = useStore((state) => state.debug);
-    const showStats = useStore((state) => state.showStats);
-    const darkMode = useStore((state) => state.darkMode);
-    const toontownMode = useStore((state) => state.toontownMode);
+const INITIAL_CAMERA_POSITION = [0, 10, 30];
+
+function GameCameraControls({ landingAnimationMode }) {
+    const controlsRef = useRef(null);
+    const { camera, invalidate } = useThree();
+    const cameraControlMethod = useStore((state) => state.cameraControlMethod);
+    const cameraMode = useGameStore((state) => state.cameraMode);
+    const resetRequest = useGameStore((state) => state.cameraResetRequest);
+    const handledReset = useRef(resetRequest);
+
+    useEffect(() => {
+        const controls = controlsRef.current;
+        if (!controls || handledReset.current === resetRequest) return;
+        handledReset.current = resetRequest;
+
+        // Clear pending pan/rotation inertia before restoring the starting view.
+        const damping = controls.enableDamping;
+        controls.enableDamping = false;
+        controls.update();
+        controls.position0.fromArray(INITIAL_CAMERA_POSITION);
+        controls.target0.set(0, 0, 0);
+        controls.zoom0 = 1;
+        controls.reset();
+        controls.enableDamping = damping;
+        camera.updateMatrixWorld();
+        invalidate();
+    }, [resetRequest, camera, invalidate]);
 
     return (
-        <Canvas camera={{ position: [0, 10, 30], fov: 50 }}>
+        <OrbitControls
+            ref={controlsRef}
+            makeDefault
+            enabled={
+                landingAnimationMode ||
+                cameraControlMethod === "Orbit" ||
+                cameraMode !== "Player"
+            }
+        />
+    );
+}
+
+function GameCanvas({ landingAnimationMode = false }) {
+    const showStats = useStore((state) => state?.debugConfig?.showStats);
+    const showPhysicsDebug = useStore(
+        (state) => state?.debugConfig?.showPhysicsDebug,
+    );
+    const darkMode = useStore((state) => state.darkMode);
+    const toontownMode = useStore((state) => state.toontownMode);
+    const seed = useStore((state) => state.seed);
+
+    return (
+        <Canvas
+            shadows="percentage"
+            camera={{ position: INITIAL_CAMERA_POSITION, fov: 50 }}
+        >
             {showStats && (
                 <>
                     <Stats className="stats-overlay" />
                 </>
             )}
 
-            <OrbitControls
-            // autoRotate={gameState?.status == 'In Lobby'}
-            />
+            <GameCameraControls landingAnimationMode={landingAnimationMode} />
 
-            {darkMode ? (
-                <>
-                    <ambientLight intensity={3} />
-                    <Sky
-                        sunPosition={[0, -10, 0]}
-                        // intensity={0.1}
-                    />
-                </>
-            ) : (
-                <>
-                    <ambientLight intensity={3} />
-                    <Sky sunPosition={[0, 10, 0]} />
-                </>
-            )}
-
-            {/* <spotLight intensity={30000} position={[0, -10, 0]} angle={5} penumbra={1} /> */}
+            <SceneLighting />
 
             {/* <Image
                 url={`${process.env.NEXT_PUBLIC_CDN}games/Jungle Vines/jungle-vines-game-background.svg`}
@@ -59,6 +92,7 @@ function GameCanvas({ landingAnimationMode = false }) {
                 position={[0, 10, -40]}
             /> */}
 
+            {/* Overlap tile edges and stagger their depth to avoid gaps and flicker. */}
             {[...Array(9)].map((_, i) => (
                 <Image
                     key={i}
@@ -67,8 +101,8 @@ function GameCanvas({ landingAnimationMode = false }) {
                             ? `img/toon-background.png`
                             : `img/background.webp`
                     }
-                    scale={[50, 50]}
-                    position={[-100 + i * 50, 10, -40]}
+                    scale={[75.2, 75]}
+                    position={[-100 + i * 75, 19, -40 - i * 0.02]}
                     color={darkMode ? "#888888" : "white"}
                 />
             ))}
@@ -100,6 +134,11 @@ function GameCanvas({ landingAnimationMode = false }) {
             /> */}
 
             <WaterPlane position={[0, -15, 0]} />
+            <TerrainBank
+                position={[-125, -15, -50]}
+                width={450}
+                seed={seed}
+            />
 
             {/* <ModelQuaterniusFishingShark
                 position={[10, -15, 0]}
@@ -109,7 +148,7 @@ function GameCanvas({ landingAnimationMode = false }) {
 
             <BobbingSharkField
                 count={10}
-                range={[100, 0, -100]}
+                range={[100, 0, -60]}
                 basePosition={[0, -15, 0]}
             />
 
@@ -137,7 +176,7 @@ function GameCanvas({ landingAnimationMode = false }) {
             <Suspense fallback={null}>
                 <Physics
                     gravity={[0, -9.81, 0]}
-                    debug={debug}
+                    debug={showPhysicsDebug}
                     colliders={false}
                 >
                     <ProcedurallyGeneratedMapElements
@@ -157,13 +196,13 @@ function GameCanvas({ landingAnimationMode = false }) {
                     <Platform
                         position={[-10, -1, 0]}
                         args={[25, 1, 2.5]}
-                        color={"saddlebrown"}
+                        surface="dirt"
                     />
 
                     <Platform
                         position={[-10, 0, 0]}
                         args={[25, 1, 2.5]}
-                        color={"green"}
+                        surface="grass"
                     />
 
                     {!landingAnimationMode && <Player />}
@@ -206,28 +245,28 @@ function GameCanvas({ landingAnimationMode = false }) {
                     <Platform
                         position={[50, -1, 0]}
                         args={[25, 1, 2.5]}
-                        color={"saddlebrown"}
+                        surface="dirt"
                     />
 
                     <Platform
                         position={[50, 0, 0]}
                         args={[25, 1, 2.5]}
-                        color={"green"}
+                        surface="grass"
                     />
 
                     <RopeSwing
-                        position={[70, 10, 0]}
-                        args={[0.1, 0.1, 15, 8]}
+                        position={[70, 20, 0]}
+                        args={[0.1, 0.1, 25, 8]}
                     />
 
                     <RopeSwing
-                        position={[80, 10, 0]}
-                        args={[0.1, 0.1, 15, 8]}
+                        position={[80, 17, 0]}
+                        args={[0.1, 0.1, 21, 8]}
                     />
 
                     <RopeSwing
-                        position={[90, 10, 0]}
-                        args={[0.1, 0.1, 15, 8]}
+                        position={[90, 22, 0]}
+                        args={[0.1, 0.1, 29, 8]}
                     />
 
                     <FlyingEnemy />
@@ -242,13 +281,13 @@ function GameCanvas({ landingAnimationMode = false }) {
                     <Platform
                         position={[225, -1, 0]}
                         args={[25, 1, 2.5]}
-                        color={"saddlebrown"}
+                        surface="dirt"
                     />
 
                     <Platform
                         position={[225, 0, 0]}
                         args={[25, 1, 2.5]}
-                        color={"green"}
+                        surface="grass"
                     />
                 </Physics>
             </Suspense>

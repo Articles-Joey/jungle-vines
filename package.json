@@ -1,9 +1,10 @@
 {
     "name": "jungle-vines",
     "description": "Swing vine to vine and complete the course in classic mode or see how far you can get in the endless mode.",
-    "version": "0.2.0",
+    "version": "0.5.0",
     "private": false,
     "homepage": "https://jungle-vines.articles.media",
+    "packageManager": "pnpm@12.0.0",
     "scripts": {
         "dev": "next dev -p 3042",
         "build": "next build",
@@ -12,7 +13,7 @@
         "format": "prettier . --write"
     },
     "dependencies": {
-        "@articles-media/articles-dev-box": "2.0.0",
+        "@articles-media/articles-dev-box": "2.2.1",
         "@articles-media/articles-gamepad-helper": "^0.0.13",
         "@emotion/cache": "^11.14.0",
         "@emotion/react": "^11.14.0",
@@ -27,11 +28,11 @@
         "classnames": "^2.5.1",
         "date-fns": "^4.4.0",
         "lodash": "^4.17.21",
-        "next": "^16.4.0",
+        "next": "^16.4.2",
         "nipplejs": "^0.10.2",
-        "react": "^19.3.0",
+        "react": "^19.3.1",
         "react-countdown": "^2.3.6",
-        "react-dom": "^19.3.0",
+        "react-dom": "^19.3.1",
         "react-hotkeys-hook": "^5.1.0",
         "react-intersection-observer": "^10.0.0",
         "socket.io-client": "^4.8.1",
@@ -45,9 +46,8 @@
         "@eslint/eslintrc": "^3",
         "babel-plugin-react-compiler": "^1.0.0",
         "eslint": "^9",
-        "eslint-config-next": "^16.4.0",
+        "eslint-config-next": "^16.4.2",
         "eslint-config-prettier": "^10.1.8",
         "prettier": "^3.9.6"
-    },
-    "packageManager": "pnpm@12.0.0"
+    }
 }

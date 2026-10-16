@@ -19,6 +19,9 @@ export default function FlyingEnemy({
     const clock = useThree((state) => state.clock);
     const { rapier } = useRapier();
     const debug = useStore((state) => state.debug);
+    const showPhysicsDebug = useStore(
+        (state) => state?.debugConfig?.showPhysicsDebug,
+    );
 
     const handlePlayerContact = ({ other }) => {
         if (other.rigidBodyObject?.userData?.tag !== "player") return;
@@ -49,7 +52,7 @@ export default function FlyingEnemy({
                 activeCollisionTypes={rapier.ActiveCollisionTypes.ALL}
                 onIntersectionEnter={handlePlayerContact}
             />
-            {debug && (
+            {showPhysicsDebug && (
                 <mesh>
                     <boxGeometry args={args} />
                     <meshStandardMaterial color="red" />

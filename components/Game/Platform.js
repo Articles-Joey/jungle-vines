@@ -1,6 +1,18 @@
+import { useEffect, useMemo } from "react";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
+import { useStore } from "@/hooks/useStore";
+import createPlatformMaterial from "./platformMaterial";
+import PlatformGrass from "./PlatformGrass";
 
-export default function Platform({ args, position, color }) {
+export default function Platform({ args, position, surface = "grass" }) {
+    const darkMode = useStore((state) => state.darkMode);
+    const [width, height, depth] = args;
+    const material = useMemo(
+        () => createPlatformMaterial(surface, height, darkMode),
+        [surface, height, darkMode],
+    );
+    useEffect(() => () => material.dispose(), [material]);
+
     return (
         <RigidBody
             type="fixed"
@@ -8,10 +20,20 @@ export default function Platform({ args, position, color }) {
             colliders={false}
         >
             <CuboidCollider args={args.map((size) => size / 2)} />
-            <mesh castShadow>
+            <mesh
+                castShadow
+                receiveShadow
+                material={material}
+            >
                 <boxGeometry args={args} />
-                <meshStandardMaterial color={color} />
             </mesh>
+            {surface === "grass" && (
+                <PlatformGrass
+                    width={width}
+                    depth={depth}
+                    y={height / 2}
+                />
+            )}
         </RigidBody>
     );
 }

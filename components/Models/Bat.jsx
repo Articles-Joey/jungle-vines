@@ -38,24 +38,32 @@ export function ModelBat(props) {
                 >
                     <skinnedMesh
                         name="Bat_1"
+                        castShadow
+                        receiveShadow
                         geometry={nodes.Bat_1.geometry}
                         material={materials.PaletteMaterial001}
                         skeleton={nodes.Bat_1.skeleton}
                     />
                     <skinnedMesh
                         name="Bat_2"
+                        castShadow
+                        receiveShadow
                         geometry={nodes.Bat_2.geometry}
                         material={materials.PaletteMaterial001}
                         skeleton={nodes.Bat_2.skeleton}
                     />
                     <skinnedMesh
                         name="Bat_3"
+                        castShadow
+                        receiveShadow
                         geometry={nodes.Bat_3.geometry}
                         material={materials.PaletteMaterial001}
                         skeleton={nodes.Bat_3.skeleton}
                     />
                     <skinnedMesh
                         name="Bat_4"
+                        castShadow
+                        receiveShadow
                         geometry={nodes.Bat_4.geometry}
                         material={materials.PaletteMaterial001}
                         skeleton={nodes.Bat_4.skeleton}

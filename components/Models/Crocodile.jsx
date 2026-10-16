@@ -16,18 +16,26 @@ export function ModelCrocodile(props) {
         >
             <mesh
                 geometry={nodes["Plane-Mesh"].geometry}
+                castShadow
+                receiveShadow
                 material={materials["4CAF50"]}
             />
             <mesh
                 geometry={nodes["Plane-Mesh_1"].geometry}
+                castShadow
+                receiveShadow
                 material={materials["8BC34A"]}
             />
             <mesh
                 geometry={nodes["Plane-Mesh_2"].geometry}
+                castShadow
+                receiveShadow
                 material={materials["1A1A1A"]}
             />
             <mesh
                 geometry={nodes["Plane-Mesh_3"].geometry}
+                castShadow
+                receiveShadow
                 material={materials.FFFFFF}
             />
         </group>

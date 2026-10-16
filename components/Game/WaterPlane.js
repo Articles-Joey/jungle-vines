@@ -3,6 +3,7 @@ import React, { useRef, useMemo } from "react";
 import { extend, useThree, useLoader, useFrame } from "@react-three/fiber";
 import { Water } from "three-stdlib";
 import { useStore } from "@/hooks/useStore";
+import { SCENE_LIGHT_OFFSET } from "./SceneLighting";
 
 extend({ Water });
 
@@ -23,8 +24,8 @@ export default function WaterPlane(props) {
             textureWidth: 512,
             textureHeight: 512,
             waterNormals,
-            sunDirection: [1000, 10, 0],
-            sunColor: darkMode ? 0x222222 : 0xffffff,
+            sunDirection: new THREE.Vector3(...SCENE_LIGHT_OFFSET).normalize(),
+            sunColor: darkMode ? 0x91a8d4 : 0xfff2d6,
             waterColor: darkMode ? 0x011111 : 0x001e0f,
             distortionScale: 3.7,
             fog: false,
@@ -38,6 +39,7 @@ export default function WaterPlane(props) {
     return (
         <water
             ref={ref}
+            receiveShadow
             args={[geom, config]}
             {...props}
             rotation-x={-Math.PI / 2}

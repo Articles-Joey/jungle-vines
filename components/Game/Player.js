@@ -2,23 +2,28 @@ import { useFrame, useThree } from "@react-three/fiber";
 import {
     CapsuleCollider,
     RigidBody,
+    useAfterPhysicsStep,
     useBeforePhysicsStep,
     useRapier,
 } from "@react-three/rapier";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Vector3 } from "three";
 import { useKeyboard } from "@/hooks/useKeyboard";
-import { Model as ModelKingMen } from "@/components/Models/King";
+import { useAudioStore } from "@/hooks/useAudioStore";
+import { ModelCharacterUAL } from "@/public/models/Characters/UAL1_Standard";
 import { useControllerStore } from "@/hooks/useControllerStore";
 import { useControlsStore, useGameStore } from "@/hooks/useGameStore";
 import { useStore } from "@/hooks/useStore";
 import { degToRad } from "three/src/math/MathUtils";
+import { getClosestRopeDistance, getRopePoint } from "./ropeMotion";
 
 const JUMP_FORCE = 6;
 const SPEED = 4;
+const AIR_CONTROL = 12;
 // The capsule center sits this far above the rigid body's origin.
 const CAPSULE_HALF_HEIGHT = 2.25;
 const CAPSULE_RADIUS = 0.5;
+const GROUND_CONTACT_DISTANCE = 0.03;
 
 function PlayerBase() {
     const rigidBodyRef = useRef(null);
@@ -26,27 +31,57 @@ function PlayerBase() {
     const ropeHeight = useRef(0);
     const previousRope = useRef(null);
     const lastLocation = useRef(null);
+    const grounded = useRef(false);
+    const takingOff = useRef(false);
+    const currentAnimation = useRef("Jump_Loop");
+    const currentLocomotion = useRef("Idle_Loop");
     const { camera, clock } = useThree();
     const { rapier } = useRapier();
     const ropeOffset = useMemo(() => new Vector3(), []);
+    const nextRopeOffset = useMemo(() => new Vector3(), []);
     const launchVelocity = useMemo(() => new Vector3(), []);
-    const swingAxis = useMemo(() => new Vector3(0, 0, 1), []);
     const playerUserData = useMemo(() => ({ tag: "player" }), []);
 
     const cameraMode = useGameStore((state) => state.cameraMode);
     const playerDisabled = useGameStore((state) => state.playerDisabled);
+    const playSound = useAudioStore((state) => state.playSound);
     const cameraControlMethod = useStore((state) => state.cameraControlMethod);
     const debug = useStore((state) => state.debug);
+    const showPhysicsDebug = useStore(
+        (state) => state?.debugConfig?.showPhysicsDebug,
+    );
     const { moveBackward, moveForward, moveRight, moveLeft, jump } =
         useKeyboard();
     const [lastMove, setLastMove] = useState("Right");
+    const [animation, setAnimation] = useState("Jump_Loop");
+    const [locomotionAnimation, setLocomotionAnimation] = useState("Idle_Loop");
+
+    const playAnimation = useCallback((nextAnimation) => {
+        if (currentAnimation.current === nextAnimation) return;
+        currentAnimation.current = nextAnimation;
+        setAnimation(nextAnimation);
+    }, []);
+
+    const handleAnimationFinished = useCallback(
+        (finishedAnimation) => {
+            if (finishedAnimation !== currentAnimation.current) return;
+
+            if (finishedAnimation === "Jump_Start") {
+                playAnimation(grounded.current ? "Jump_Land" : "Jump_Loop");
+            } else if (finishedAnimation === "Jump_Land") {
+                playAnimation(
+                    grounded.current ? currentLocomotion.current : "Jump_Loop",
+                );
+            }
+        },
+        [playAnimation],
+    );
 
     useEffect(() => {
         if (playerDisabled) {
-            const audio = new Audio("/audio/roblox-death-sound.mp3");
-            audio.play();
+            playSound("/audio/death-sound.mp3");
         }
-    }, [playerDisabled]);
+    }, [playerDisabled, playSound]);
 
     // Read the store during physics updates so grabs, death, and teleports take
     // effect even before React has rendered the new state.
@@ -60,6 +95,9 @@ function PlayerBase() {
             body.setBodyType(rapier.RigidBodyType.Dynamic, true);
             body.setTranslation({ x, y, z }, true);
             body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+            grounded.current = false;
+            takingOff.current = false;
+            playAnimation("Jump_Loop");
             state.setAttachedRope(null);
             state.setTeleport(false);
             state = useGameStore.getState();
@@ -69,6 +107,9 @@ function PlayerBase() {
             body.setBodyType(rapier.RigidBodyType.Dynamic, true);
             body.setTranslation({ x: 0, y: 10, z: 0 }, true);
             body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+            grounded.current = false;
+            takingOff.current = false;
+            playAnimation("Jump_Loop");
             state.setAttachedRope(null);
             state.setPlayerDisabled(false);
             state = useGameStore.getState();
@@ -89,6 +130,8 @@ function PlayerBase() {
 
         if (state.playerDisabled) {
             previousRope.current = null;
+            grounded.current = false;
+            takingOff.current = false;
             return;
         }
 
@@ -97,23 +140,25 @@ function PlayerBase() {
         const controllerX = axes && Math.abs(axes[0]) > 0.3 ? axes[0] : 0;
 
         if (rope) {
+            grounded.current = false;
+            takingOff.current = false;
+            playAnimation("Jump_Loop");
             if (previousRope.current !== rope) {
-                // Measure from the capsule center along the rotated rope.
+                // Find the nearest point along the bent rope to avoid snapping
+                // the player onto an imaginary straight line when grabbing it.
                 const playerPosition = body.translation();
                 ropeOffset.set(
-                    playerPosition.x - rope.position[0],
-                    playerPosition.y + CAPSULE_HALF_HEIGHT - rope.position[1],
-                    playerPosition.z - rope.position[2],
+                    playerPosition.x,
+                    playerPosition.y + CAPSULE_HALF_HEIGHT,
+                    playerPosition.z,
                 );
-                ropeOffset.applyQuaternion(rope.rotation.clone().invert());
-                const angle =
-                    Math.sin(
-                        clock.elapsedTime * rope.swingSpeed + rope.swingPhase,
-                    ) * rope.swingAmplitude;
-                ropeOffset.applyAxisAngle(swingAxis, -angle);
                 ropeHeight.current = Math.max(
                     1,
-                    Math.min(-ropeOffset.y, rope.length),
+                    getClosestRopeDistance(
+                        rope.motion,
+                        ropeOffset,
+                        clock.elapsedTime,
+                    ),
                 );
                 body.setLinvel({ x: 0, y: 0, z: 0 }, true);
             }
@@ -134,38 +179,26 @@ function PlayerBase() {
             const climbVelocity =
                 (ropeHeight.current - previousHeight) / world.timestep;
             const time = clock.elapsedTime;
-            const angle =
-                Math.sin(time * rope.swingSpeed + rope.swingPhase) *
-                rope.swingAmplitude;
-
-            ropeOffset
-                .set(
-                    ropeHeight.current * Math.sin(angle),
-                    -ropeHeight.current * Math.cos(angle),
-                    0,
-                )
-                .applyQuaternion(rope.rotation);
+            getRopePoint(rope.motion, ropeHeight.current, time, ropeOffset);
             const nextPosition = {
-                x: rope.position[0] + ropeOffset.x,
+                x: ropeOffset.x,
                 // The player stays upright; place its capsule center on the rope.
-                y: rope.position[1] + ropeOffset.y - CAPSULE_HALF_HEIGHT,
-                z: rope.position[2] + ropeOffset.z,
+                y: ropeOffset.y - CAPSULE_HALF_HEIGHT,
+                z: ropeOffset.z,
             };
 
             if (jump || touchControls.jump) {
-                const thetaDot =
-                    rope.swingAmplitude *
-                    rope.swingSpeed *
-                    Math.cos(time * rope.swingSpeed + rope.swingPhase);
+                // Sample the same curved path one step ahead so releasing a
+                // rope preserves both its swing momentum and the climb motion.
+                getRopePoint(
+                    rope.motion,
+                    ropeHeight.current + climbVelocity * world.timestep,
+                    time + world.timestep,
+                    nextRopeOffset,
+                );
                 launchVelocity
-                    .set(
-                        ropeHeight.current * Math.cos(angle) * thetaDot +
-                            climbVelocity * Math.sin(angle),
-                        ropeHeight.current * Math.sin(angle) * thetaDot -
-                            climbVelocity * Math.cos(angle),
-                        0,
-                    )
-                    .applyQuaternion(rope.rotation);
+                    .subVectors(nextRopeOffset, ropeOffset)
+                    .multiplyScalar(1 / world.timestep);
                 launchVelocity.y += JUMP_FORCE;
 
                 // Switch immediately so Rapier integrates the release velocity
@@ -173,6 +206,8 @@ function PlayerBase() {
                 body.setBodyType(rapier.RigidBodyType.Dynamic, true);
                 body.setTranslation(nextPosition, true);
                 body.setLinvel(launchVelocity, true);
+                takingOff.current = true;
+                playAnimation("Jump_Start");
                 state.setAttachedRope(null);
                 state.setLastRopeDetachTime(Date.now());
                 previousRope.current = null;
@@ -192,12 +227,34 @@ function PlayerBase() {
         if (direction > 0) setLastMove("Right");
         if (direction < 0) setLastMove("Left");
 
+        const nextLocomotion =
+            Math.abs(direction) > 0.05 ? "Walk_Loop" : "Idle_Loop";
+        if (currentLocomotion.current !== nextLocomotion) {
+            currentLocomotion.current = nextLocomotion;
+            setLocomotionAnimation(nextLocomotion);
+        }
+
         const velocity = body.linvel();
-        const shouldJump =
-            (jump || touchControls.jump) && Math.abs(velocity.y) < 0.05;
+        const shouldJump = (jump || touchControls.jump) && grounded.current;
+        if (shouldJump) {
+            grounded.current = false;
+            takingOff.current = true;
+            playAnimation("Jump_Start");
+        }
+        const moveVelocity = direction * SPEED * (state.shift ? 2 : 1);
+        const airAdjustment = Math.max(
+            -AIR_CONTROL * world.timestep,
+            Math.min(AIR_CONTROL * world.timestep, moveVelocity - velocity.x),
+        );
+        // Keep the rope's horizontal release momentum, with gradual steering
+        // in the air instead of replacing that velocity on the very next step.
+        const horizontalVelocity =
+            grounded.current || shouldJump
+                ? moveVelocity
+                : velocity.x + (direction ? airAdjustment : 0);
         body.setLinvel(
             {
-                x: direction * SPEED * (state.shift ? 2 : 1),
+                x: horizontalVelocity,
                 y: shouldJump ? JUMP_FORCE : velocity.y,
                 z: 0,
             },
@@ -205,6 +262,46 @@ function PlayerBase() {
         );
         if (shouldJump && touchControls.jump) {
             setTouchControls({ ...touchControls, jump: false });
+        }
+    });
+
+    useAfterPhysicsStep((world) => {
+        const body = rigidBodyRef.current;
+        const collider = colliderRef.current;
+        const state = useGameStore.getState();
+        if (!body || !collider || state.playerDisabled || state.attachedRope)
+            return;
+
+        let touchingGround = false;
+        world.contactPairsWith(collider, (other) => {
+            if (touchingGround || other.isSensor()) return;
+
+            // The other collider's outward normal must point up. Side and
+            // ceiling contacts cannot ground the player or trigger a landing.
+            const contact = other.contactCollider(
+                collider,
+                GROUND_CONTACT_DISTANCE,
+            );
+            touchingGround = contact !== null && contact.normal1.y > 0.5;
+        });
+
+        // A takeoff can retain its previous floor contact for one physics step.
+        // Wait for separation or a blocked takeoff to settle before landing.
+        if (takingOff.current) {
+            if (!touchingGround || body.linvel().y <= 0) takingOff.current = false;
+            touchingGround = false;
+        }
+
+        const wasGrounded = grounded.current;
+        grounded.current = touchingGround;
+        if (touchingGround) {
+            if (!wasGrounded) {
+                playAnimation("Jump_Land");
+            } else if (currentAnimation.current !== "Jump_Land") {
+                playAnimation(currentLocomotion.current);
+            }
+        } else if (currentAnimation.current !== "Jump_Start") {
+            playAnimation("Jump_Loop");
         }
     });
 
@@ -259,7 +356,7 @@ function PlayerBase() {
                 restitution={0}
                 collisionGroups={playerDisabled ? 0 : 0xffffffff}
             />
-            {debug && (
+            {showPhysicsDebug && (
                 <mesh position={[0, CAPSULE_HALF_HEIGHT, 0]}>
                     <capsuleGeometry
                         args={[CAPSULE_RADIUS, CAPSULE_HALF_HEIGHT * 2, 8, 16]}
@@ -270,7 +367,13 @@ function PlayerBase() {
                     />
                 </mesh>
             )}
-            <ModelKingMen
+            <ModelCharacterUAL
+                castShadow
+                receiveShadow
+                animation={animation}
+                locomotionAnimation={locomotionAnimation}
+                onAnimationFinished={handleAnimationFinished}
+                animationPaused={playerDisabled}
                 scale={3}
                 rotation={[
                     0,

@@ -44,12 +44,16 @@ export function ModelSpider(props) {
                 >
                     <skinnedMesh
                         name="Cube_1"
+                        castShadow
+                        receiveShadow
                         geometry={nodes.Cube_1.geometry}
                         material={materials.Material}
                         skeleton={nodes.Cube_1.skeleton}
                     />
                     <skinnedMesh
                         name="Cube_2"
+                        castShadow
+                        receiveShadow
                         geometry={nodes.Cube_2.geometry}
                         material={materials["Material.001"]}
                         skeleton={nodes.Cube_2.skeleton}

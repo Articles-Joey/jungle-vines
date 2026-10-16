@@ -3,6 +3,8 @@ import RopeSwing from "./RopeSwing";
 import Star from "./Star";
 import { useStore } from "@/hooks/useStore";
 
+const SWING_START_HEIGHT_OFFSET = 8;
+
 export default function ProcedurallyGeneratedMapElements({
     // seed = 12345,
     count = 10,
@@ -10,6 +12,10 @@ export default function ProcedurallyGeneratedMapElements({
     startPosition = [0, 10, 0],
 }) {
     const seed = useStore((state) => state.seed);
+    const debug = useStore((state) => state.debug);
+    const showPhysicsDebug = useStore(
+        (state) => state?.debugConfig?.showPhysicsDebug,
+    );
 
     const ropes = useMemo(() => {
         // Simple LCG (Linear Congruential Generator) for deterministic randomness
@@ -39,7 +45,12 @@ export default function ProcedurallyGeneratedMapElements({
             // Randomly offset from the start Y position within the Y range
             // (random() - 0.5) gives -0.5 to 0.5
             const yOffset = (random() - 0.5) * range[1];
-            const currentY = startPosition[1] + yOffset;
+            const currentY =
+                startPosition[1] + yOffset + SWING_START_HEIGHT_OFFSET;
+            // Vary the lower end independently of the swing pivot while keeping
+            // the rope tips above the water and within the playable course.
+            const endY = -3 - random() * 5;
+            const length = Math.max(8, currentY - endY);
 
             // Generate rope properties deterministically
             const hasEnemy = random() > 0.5;
@@ -48,6 +59,7 @@ export default function ProcedurallyGeneratedMapElements({
 
             items.push({
                 position: [currentX, currentY, startPosition[2]],
+                length,
                 hasEnemy,
                 swingSpeed,
                 swingPhase,
@@ -104,12 +116,15 @@ export default function ProcedurallyGeneratedMapElements({
         <>
             {ropes.map((rope, i) => (
                 <group key={i}>
-                    <mesh position={rope.position}>
-                        <sphereGeometry args={[0.5, 16, 16]} />
-                        <meshStandardMaterial color="red" />
-                    </mesh>
+                    {showPhysicsDebug && (
+                        <mesh position={rope.position}>
+                            <sphereGeometry args={[0.5, 16, 16]} />
+                            <meshStandardMaterial color="red" />
+                        </mesh>
+                    )}
                     <RopeSwing
                         position={rope.position}
+                        args={[0.1, 0.1, rope.length, 8]}
                         hasEnemy={rope.hasEnemy}
                         swingSpeed={rope.swingSpeed}
                         swingPhase={rope.swingPhase}

@@ -9,6 +9,10 @@ export const useGameStore = create((set) => ({
         }));
     },
 
+    cameraResetRequest: 0,
+    resetCamera: () =>
+        set((state) => ({ cameraResetRequest: state.cameraResetRequest + 1 })),
+
     playerLocation: false,
     setPlayerLocation: (newValue) => {
         set((prev) => ({

@@ -30,24 +30,32 @@ export function ModelQuaterniusFishingShark(props) {
                 <group name="Shark">
                     <skinnedMesh
                         name="Icosphere010"
+                        castShadow
+                        receiveShadow
                         geometry={nodes.Icosphere010.geometry}
                         material={materials.Shark_Dark}
                         skeleton={nodes.Icosphere010.skeleton}
                     />
                     <skinnedMesh
                         name="Icosphere010_1"
+                        castShadow
+                        receiveShadow
                         geometry={nodes.Icosphere010_1.geometry}
                         material={materials.Shark_Main}
                         skeleton={nodes.Icosphere010_1.skeleton}
                     />
                     <skinnedMesh
                         name="Icosphere010_2"
+                        castShadow
+                        receiveShadow
                         geometry={nodes.Icosphere010_2.geometry}
                         material={materials.Shark_Light}
                         skeleton={nodes.Icosphere010_2.skeleton}
                     />
                     <skinnedMesh
                         name="Icosphere010_3"
+                        castShadow
+                        receiveShadow
                         geometry={nodes.Icosphere010_3.geometry}
                         material={materials.Eyes}
                         skeleton={nodes.Icosphere010_3.skeleton}
