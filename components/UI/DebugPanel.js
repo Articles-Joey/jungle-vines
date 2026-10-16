@@ -10,6 +10,7 @@ import Divider from "@mui/material/Divider";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ReplayIcon from "@mui/icons-material/Replay";
 import CodeIcon from "@mui/icons-material/Code";
+import MyLocationIcon from "@mui/icons-material/MyLocation";
 import { useStore } from "@/hooks/useStore";
 import { useGameStore } from "@/hooks/useGameStore";
 import ArticlesButton from "./Button";
@@ -24,9 +25,15 @@ export default function DebugPanel() {
     );
     const resetCamera = useGameStore((state) => state.resetCamera);
     const playerLocation = useGameStore((state) => state.playerLocation);
+    const originX = useGameStore((state) => state.originX);
+    const teleportPicking = useGameStore((state) => state.teleportPicking);
+    const setTeleportPicking = useGameStore(
+        (state) => state.setTeleportPicking,
+    );
+    const runStatus = useGameStore((state) => state.runStatus);
     const [cameraAnchor, setCameraAnchor] = useState(null);
     const coordinates = [
-        playerLocation?.x ?? 0,
+        Math.round(((playerLocation?.x ?? 0) + originX) * 100) / 100,
         playerLocation?.y ?? 0,
         playerLocation?.z ?? 0,
     ].join(", ");
@@ -59,6 +66,16 @@ export default function DebugPanel() {
                 <Box sx={{ display: "flex", flexWrap: "wrap" }}>
                     <ArticlesButton
                         small
+                        sx={{ width: "100%" }}
+                        startIcon={<MyLocationIcon />}
+                        active={teleportPicking}
+                        disabled={runStatus !== "playing"}
+                        onClick={() => setTeleportPicking(!teleportPicking)}
+                    >
+                        {teleportPicking ? "Cancel teleport" : "Teleport"}
+                    </ArticlesButton>
+                    <ArticlesButton
+                        small
                         sx={{ width: "50%" }}
                         startIcon={<ReplayIcon />}
                         onClick={() => reloadScene()}
@@ -86,7 +103,9 @@ export default function DebugPanel() {
                         aria-haspopup="menu"
                         aria-expanded={cameraAnchor ? "true" : undefined}
                         endIcon={<ArrowDropDownIcon />}
-                        onClick={(event) => setCameraAnchor(event.currentTarget)}
+                        onClick={(event) =>
+                            setCameraAnchor(event.currentTarget)
+                        }
                     >
                         Camera
                     </ArticlesButton>
@@ -100,6 +119,11 @@ export default function DebugPanel() {
                         Debug Mode
                     </ArticlesButton>
                 </Box>
+                {teleportPicking && (
+                    <Box sx={{ p: 1, fontSize: "0.8rem" }}>
+                        Click a scene object to teleport. Escape cancels.
+                    </Box>
+                )}
                 <Menu
                     id="debug-camera-menu"
                     anchorEl={cameraAnchor}

@@ -1,9 +1,9 @@
-import { memo, Suspense, useEffect, useRef } from "react";
+import { memo, Suspense, useEffect, useLayoutEffect, useRef } from "react";
 
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, Stats, Image } from "@react-three/drei";
 
-import { Physics } from "@react-three/rapier";
+import { Physics, useBeforePhysicsStep } from "@react-three/rapier";
 
 import Player from "./Player";
 import WaterPlane from "./WaterPlane";
@@ -11,15 +11,15 @@ import TerrainBank from "./TerrainBank";
 import SceneLighting from "./SceneLighting";
 
 import FlyingEnemy from "./FlyingEnemy";
-import RopeSwing from "./RopeSwing";
-import Platform from "./Platform";
-import MovingPlatform from "./MovingPlatform";
 
-import BobbingSharkField from "./BobbingSharkField";
-import ProcedurallyGeneratedMapElements from "./ProcedurallyGeneratedMapElements";
+import WildlifeField from "./WildlifeField";
+import DebugTeleport from "./DebugTeleport";
+import CourseMap from "./CourseMap";
+import { CHUNK_LENGTH, MAP_CONFIG } from "./mapLayout";
+import { GRAVITY } from "./movementConfig";
 import { useStore } from "@/hooks/useStore";
 import { useGameStore } from "@/hooks/useGameStore";
-import BobbingCrocodileField from "./BobbingCrocodileField";
+import { useKeyboard } from "@/hooks/useKeyboard";
 
 const INITIAL_CAMERA_POSITION = [0, 10, 30];
 
@@ -30,11 +30,31 @@ function GameCameraControls({ landingAnimationMode }) {
     const cameraMode = useGameStore((state) => state.cameraMode);
     const resetRequest = useGameStore((state) => state.cameraResetRequest);
     const handledReset = useRef(resetRequest);
+    const originX = useGameStore((state) => state.originX);
+    const runId = useGameStore((state) => state.runId);
+    const previousOrigin = useRef(originX);
+    const previousRun = useRef(runId);
+
+    useLayoutEffect(() => {
+        const shift = originX - previousOrigin.current;
+        if (!landingAnimationMode && shift && previousRun.current === runId) {
+            camera.position.x -= shift;
+            if (controlsRef.current) controlsRef.current.target.x -= shift;
+            camera.updateMatrixWorld();
+        }
+        previousOrigin.current = originX;
+    }, [originX, runId, camera, landingAnimationMode]);
 
     useEffect(() => {
         const controls = controlsRef.current;
-        if (!controls || handledReset.current === resetRequest) return;
+        if (
+            !controls ||
+            (handledReset.current === resetRequest &&
+                previousRun.current === runId)
+        )
+            return;
         handledReset.current = resetRequest;
+        previousRun.current = runId;
 
         // Clear pending pan/rotation inertia before restoring the starting view.
         const damping = controls.enableDamping;
@@ -47,7 +67,7 @@ function GameCameraControls({ landingAnimationMode }) {
         controls.enableDamping = damping;
         camera.updateMatrixWorld();
         invalidate();
-    }, [resetRequest, camera, invalidate]);
+    }, [resetRequest, runId, camera, invalidate]);
 
     return (
         <OrbitControls
@@ -62,234 +82,152 @@ function GameCameraControls({ landingAnimationMode }) {
     );
 }
 
-function GameCanvas({ landingAnimationMode = false }) {
-    const showStats = useStore((state) => state?.debugConfig?.showStats);
-    const showPhysicsDebug = useStore(
-        (state) => state?.debugConfig?.showPhysicsDebug,
-    );
+function SimulationClock() {
+    useBeforePhysicsStep((world) => {
+        const state = useGameStore.getState();
+        if (state.runStatus === "playing")
+            state.simulationClock.elapsed += world.timestep;
+    });
+    return null;
+}
+
+function CourseEnvironment({ mode, seed, activeChunk, originX }) {
     const darkMode = useStore((state) => state.darkMode);
     const toontownMode = useStore((state) => state.toontownMode);
-    const seed = useStore((state) => state.seed);
+    const first = mode === "endless" ? activeChunk - 3 : -2;
+    const last =
+        mode === "endless" ? activeChunk + 4 : MAP_CONFIG[mode].chunks + 2;
+    const firstTile = Math.floor((first * CHUNK_LENGTH) / 75);
+    const lastTile = Math.ceil((last * CHUNK_LENGTH) / 75);
+    const center =
+        mode === "endless"
+            ? activeChunk * CHUNK_LENGTH - originX
+            : (MAP_CONFIG[mode].chunks * CHUNK_LENGTH) / 2;
+    return (
+        <>
+            {Array.from({ length: lastTile - firstTile + 1 }, (_, offset) => {
+                const tile = firstTile + offset;
+                return (
+                    <Image
+                        key={tile}
+                        url={
+                            toontownMode
+                                ? "/img/toon-background.png"
+                                : "/img/background.webp"
+                        }
+                        scale={[75.2, 75]}
+                        position={[
+                            tile * 75 - originX,
+                            19,
+                            -40 - (tile % 2) * 0.02,
+                        ]}
+                        color={darkMode ? "#888888" : "white"}
+                    />
+                );
+            })}
+            {Array.from({ length: last - first + 1 }, (_, offset) => {
+                const index = first + offset;
+                return (
+                    <TerrainBank
+                        key={index}
+                        position={[index * CHUNK_LENGTH - originX, -15, -50]}
+                        width={CHUNK_LENGTH}
+                        sectionWidth={CHUNK_LENGTH}
+                        worldOffsetX={index * CHUNK_LENGTH}
+                        seed={seed}
+                    />
+                );
+            })}
+            <WaterPlane position={[center, -15, 0]} />
+            <WildlifeField
+                seed={seed}
+                worldCenter={center + originX}
+                originX={originX}
+            />
+        </>
+    );
+}
 
+function GameWorld({ landingAnimationMode }) {
+    // Keep held keys alive when the physics world is recentered in endless mode.
+    const keyboard = useKeyboard(!landingAnimationMode);
+    const selectedMode = useStore((state) => state.gameMode);
+    const selectedSeed = useStore((state) => state.seed);
+    const runMode = useGameStore((state) => state.runMode);
+    const runSeed = useGameStore((state) => state.runSeed);
+    const runId = useGameStore((state) => state.runId);
+    const runStatus = useGameStore((state) => state.runStatus);
+    const teleportPicking = useGameStore((state) => state.teleportPicking);
+    const debug = useStore((state) => state.debug);
+    const runOrigin = useGameStore((state) => state.originX);
+    const playerChunk = useGameStore((state) =>
+        Math.max(
+            0,
+            Math.floor(
+                (state.originX + (state.playerLocation?.x ?? 0)) / CHUNK_LENGTH,
+            ),
+        ),
+    );
+    const showPhysicsDebug = useStore(
+        (state) => state.debugConfig?.showPhysicsDebug,
+    );
+    const mode = (landingAnimationMode ? selectedMode : runMode) || "easy";
+    const seed = landingAnimationMode ? selectedSeed : runSeed;
+    const originX = landingAnimationMode ? 0 : runOrigin;
+    const activeChunk = landingAnimationMode ? 0 : playerChunk;
+    const config = MAP_CONFIG[mode];
+    return (
+        <DebugTeleport enabled={!landingAnimationMode && debug}>
+            <CourseEnvironment
+                mode={mode}
+                seed={seed}
+                activeChunk={activeChunk}
+                originX={originX}
+            />
+            <Physics
+                key={`${runId}:${originX}:${mode}`}
+                gravity={[0, -GRAVITY, 0]}
+                debug={showPhysicsDebug}
+                colliders={false}
+                paused={
+                    !landingAnimationMode &&
+                    (runStatus !== "playing" || teleportPicking)
+                }
+            >
+                {!landingAnimationMode && <SimulationClock />}
+                <CourseMap
+                    mode={mode}
+                    seed={seed}
+                    activeChunk={activeChunk}
+                    originX={originX}
+                />
+                {!landingAnimationMode && <Player controls={keyboard} />}
+                {!landingAnimationMode &&
+                    Array.from({ length: config.enemies }, (_, id) => (
+                        <FlyingEnemy
+                            key={id}
+                            id={id}
+                            speed={config.enemySpeed}
+                            yRange={mode === "easy" ? [1, 8] : [-1, 15]}
+                        />
+                    ))}
+            </Physics>
+        </DebugTeleport>
+    );
+}
+
+function GameCanvas({ landingAnimationMode = false }) {
+    const showStats = useStore((state) => state.debugConfig?.showStats);
     return (
         <Canvas
             shadows="percentage"
             camera={{ position: INITIAL_CAMERA_POSITION, fov: 50 }}
         >
-            {showStats && (
-                <>
-                    <Stats className="stats-overlay" />
-                </>
-            )}
-
+            {showStats && <Stats className="stats-overlay" />}
             <GameCameraControls landingAnimationMode={landingAnimationMode} />
-
             <SceneLighting />
-
-            {/* <Image
-                url={`${process.env.NEXT_PUBLIC_CDN}games/Jungle Vines/jungle-vines-game-background.svg`}
-                scale={[100, 50]}
-                position={[0, 10, -40]}
-            /> */}
-
-            {/* Overlap tile edges and stagger their depth to avoid gaps and flicker. */}
-            {[...Array(9)].map((_, i) => (
-                <Image
-                    key={i}
-                    url={
-                        toontownMode
-                            ? `img/toon-background.png`
-                            : `img/background.webp`
-                    }
-                    scale={[75.2, 75]}
-                    position={[-100 + i * 75, 19, -40 - i * 0.02]}
-                    color={darkMode ? "#888888" : "white"}
-                />
-            ))}
-
-            {/* <pointLight position={[-10, -10, -10]} /> */}
-
-            {/* <FlatRing
-                args={[3, 5, 32]}
-                color={"gold"}
-            />
-
-            <FlatRing
-                args={[6, 8, 32]}
-                color={"white"}
-            /> */}
-
-            {/* <Rocks /> */}
-
-            {/* <ModelGoogleIglooOpen
-                position={[100, 30, 0]}
-                scale={3}
-                rotation={[0, degToRad(-55), 0]}
-            />
-
-            <ModelKennyNLMiniGolfFlagRed
-                position={[100, 30, 10]}
-                scale={10}
-                rotation={[0, degToRad(-90), 0]}
-            /> */}
-
-            <WaterPlane position={[0, -15, 0]} />
-            <TerrainBank
-                position={[-125, -15, -50]}
-                width={450}
-                seed={seed}
-            />
-
-            {/* <ModelQuaterniusFishingShark
-                position={[10, -15, 0]}
-                scale={2}
-                rotation={[0, degToRad(-90), 0]}
-            /> */}
-
-            <BobbingSharkField
-                count={10}
-                range={[100, 0, -60]}
-                basePosition={[0, -15, 0]}
-            />
-
-            <BobbingCrocodileField
-                count={10}
-                range={[100, 0, -100]}
-                basePosition={[0, -17, 0]}
-            />
-
-            {/* <ModelFly
-                position={[0, 10, 0]}
-                rotation={[0, degToRad(-90), 0]}
-                
-            /> */}
-
-            {/* <ModelSpider
-                scale={1}
-                // position={[0, 10, 0]}
-            /> */}
-            {/* <ModelSpider
-                scale={1}
-                // position={[20, 10, 0]}
-            /> */}
-
             <Suspense fallback={null}>
-                <Physics
-                    gravity={[0, -9.81, 0]}
-                    debug={showPhysicsDebug}
-                    colliders={false}
-                >
-                    <ProcedurallyGeneratedMapElements
-                        seed={12345}
-                        count={20}
-                        range={[200, 10]}
-                        startPosition={[3, 10, 0]}
-                    />
-
-                    {/* <MovingPlatform
-                        position={[-20, 5, 0]}
-                        args={[5, 1, 5]}
-                        range={5}
-                        speed={1}
-                    /> */}
-
-                    <Platform
-                        position={[-10, -1, 0]}
-                        args={[25, 1, 2.5]}
-                        surface="dirt"
-                    />
-
-                    <Platform
-                        position={[-10, 0, 0]}
-                        args={[25, 1, 2.5]}
-                        surface="grass"
-                    />
-
-                    {!landingAnimationMode && <Player />}
-
-                    {/* <ModelKingMen
-                    scale={3}
-                    rotation={[0, degToRad(90), 0]}
-                    position={[0, 0.5, 0]}
-                /> */}
-
-                    {/* <>
-                        <RopeSwing
-                            position={[
-                                10,
-                                10,
-                                0
-                            ]}
-                            args={[0.1, 0.1, 15, 8]}
-                        />
-    
-                        <RopeSwing
-                            position={[
-                                20,
-                                10,
-                                0
-                            ]}
-                            args={[0.1, 0.1, 15, 8]}
-                        />
-    
-                        <RopeSwing
-                            position={[
-                                30,
-                                10,
-                                0
-                            ]}
-                            args={[0.1, 0.1, 15, 8]}
-                        />
-                    </> */}
-
-                    <Platform
-                        position={[50, -1, 0]}
-                        args={[25, 1, 2.5]}
-                        surface="dirt"
-                    />
-
-                    <Platform
-                        position={[50, 0, 0]}
-                        args={[25, 1, 2.5]}
-                        surface="grass"
-                    />
-
-                    <RopeSwing
-                        position={[70, 20, 0]}
-                        args={[0.1, 0.1, 25, 8]}
-                    />
-
-                    <RopeSwing
-                        position={[80, 17, 0]}
-                        args={[0.1, 0.1, 21, 8]}
-                    />
-
-                    <RopeSwing
-                        position={[90, 22, 0]}
-                        args={[0.1, 0.1, 29, 8]}
-                    />
-
-                    <FlyingEnemy />
-
-                    <MovingPlatform
-                        position={[100, 5, 0]}
-                        args={[5, 1, 5]}
-                        range={5}
-                        speed={1}
-                    />
-
-                    <Platform
-                        position={[225, -1, 0]}
-                        args={[25, 1, 2.5]}
-                        surface="dirt"
-                    />
-
-                    <Platform
-                        position={[225, 0, 0]}
-                        args={[25, 1, 2.5]}
-                        surface="grass"
-                    />
-                </Physics>
+                <GameWorld landingAnimationMode={landingAnimationMode} />
             </Suspense>
         </Canvas>
     );

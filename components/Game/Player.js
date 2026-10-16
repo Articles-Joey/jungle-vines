@@ -8,31 +8,46 @@ import {
 } from "@react-three/rapier";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Vector3 } from "three";
-import { useKeyboard } from "@/hooks/useKeyboard";
 import { useAudioStore } from "@/hooks/useAudioStore";
 import { ModelCharacterUAL } from "@/public/models/Characters/UAL1_Standard";
 import { useControllerStore } from "@/hooks/useControllerStore";
-import { useControlsStore, useGameStore } from "@/hooks/useGameStore";
+import {
+    getSimulationTime,
+    useControlsStore,
+    useGameStore,
+} from "@/hooks/useGameStore";
 import { useStore } from "@/hooks/useStore";
 import { degToRad } from "three/src/math/MathUtils";
 import { getClosestRopeDistance, getRopePoint } from "./ropeMotion";
+import { CHUNK_LENGTH } from "./mapLayout";
+import {
+    PLAYER_JUMP_FORCE as JUMP_FORCE,
+    PLAYER_SPEED as SPEED,
+} from "./movementConfig";
 
-const JUMP_FORCE = 6;
-const SPEED = 4;
 const AIR_CONTROL = 12;
 // The capsule center sits this far above the rigid body's origin.
 const CAPSULE_HALF_HEIGHT = 2.25;
 const CAPSULE_RADIUS = 0.5;
+// Half the *total* standing height (including the rounded ends): 5.5 -> 2.75.
+const CROUCH_HALF_HEIGHT = (CAPSULE_HALF_HEIGHT - CAPSULE_RADIUS) / 2;
+const STANDING_TOP = CAPSULE_HALF_HEIGHT * 2 + CAPSULE_RADIUS;
+const CROUCH_TOP = CROUCH_HALF_HEIGHT * 2 + CAPSULE_RADIUS;
+const CROUCH_WALK = "Crouch_Fwd_Loop";
+const CROUCH_IDLE = "Crouch_Idle_Loop";
 const GROUND_CONTACT_DISTANCE = 0.03;
 
-function PlayerBase() {
+function PlayerBase({ controls }) {
+    const initialCrouch = useRef(useGameStore.getState().spawnCrouched);
     const rigidBodyRef = useRef(null);
     const colliderRef = useRef(null);
     const ropeHeight = useRef(0);
     const previousRope = useRef(null);
     const lastLocation = useRef(null);
-    const grounded = useRef(false);
+    const grounded = useRef(initialCrouch.current);
     const takingOff = useRef(false);
+    const jumpHeld = useRef(false);
+    const crouched = useRef(initialCrouch.current);
     const currentAnimation = useRef("Jump_Loop");
     const currentLocomotion = useRef("Idle_Loop");
     const { camera, clock } = useThree();
@@ -44,17 +59,72 @@ function PlayerBase() {
 
     const cameraMode = useGameStore((state) => state.cameraMode);
     const playerDisabled = useGameStore((state) => state.playerDisabled);
+    const spawnPosition = useGameStore((state) => state.spawnPosition);
+    const spawnVelocity = useGameStore((state) => state.spawnVelocity);
+    const mountedOrigin = useRef(useGameStore.getState().originX);
+    const mountedRun = useRef(useGameStore.getState().runId);
     const playSound = useAudioStore((state) => state.playSound);
     const cameraControlMethod = useStore((state) => state.cameraControlMethod);
-    const debug = useStore((state) => state.debug);
     const showPhysicsDebug = useStore(
         (state) => state?.debugConfig?.showPhysicsDebug,
     );
-    const { moveBackward, moveForward, moveRight, moveLeft, jump } =
-        useKeyboard();
+    const { moveBackward, moveForward, moveRight, moveLeft, jump } = controls;
     const [lastMove, setLastMove] = useState("Right");
     const [animation, setAnimation] = useState("Jump_Loop");
     const [locomotionAnimation, setLocomotionAnimation] = useState("Idle_Loop");
+    const [crouching, setCrouching] = useState(initialCrouch.current);
+    const headClearanceShape = useMemo(
+        () =>
+            new rapier.Cuboid(
+                CAPSULE_RADIUS - 0.02,
+                (STANDING_TOP - CROUCH_TOP) / 2 - 0.02,
+                CAPSULE_RADIUS - 0.02,
+            ),
+        [rapier],
+    );
+
+    const applyCrouch = useCallback(
+        (requested, world, force = false) => {
+            const collider = colliderRef.current;
+            const body = rigidBodyRef.current;
+            if (!collider || !body || requested === crouched.current)
+                return crouched.current;
+            if (!requested && !force) {
+                const position = body.translation();
+                let blocked = false;
+                // Only test the added headroom; the floor must not prevent standing.
+                world.intersectionsWithShape(
+                    {
+                        x: position.x,
+                        y: position.y + (STANDING_TOP + CROUCH_TOP) / 2,
+                        z: position.z,
+                    },
+                    { x: 0, y: 0, z: 0, w: 1 },
+                    headClearanceShape,
+                    () => {
+                        blocked = true;
+                        return false;
+                    },
+                    rapier.QueryFilterFlags.EXCLUDE_SENSORS,
+                    undefined,
+                    collider,
+                    body,
+                );
+                if (blocked) return true;
+            }
+            const halfHeight = requested
+                ? CROUCH_HALF_HEIGHT
+                : CAPSULE_HALF_HEIGHT;
+            collider.setHalfHeight(halfHeight);
+            collider.setTranslationWrtParent({ x: 0, y: halfHeight, z: 0 });
+            collider.setMass(1);
+            body.wakeUp();
+            crouched.current = requested;
+            setCrouching(requested);
+            return requested;
+        },
+        [headClearanceShape, rapier],
+    );
 
     const playAnimation = useCallback((nextAnimation) => {
         if (currentAnimation.current === nextAnimation) return;
@@ -89,30 +159,33 @@ function PlayerBase() {
         const body = rigidBodyRef.current;
         if (!body) return;
         let state = useGameStore.getState();
+        if (
+            state.runStatus !== "playing" ||
+            state.originX !== mountedOrigin.current ||
+            state.runId !== mountedRun.current
+        )
+            return;
 
         if (state.teleport) {
             const [x, y, z] = state.teleport;
             body.setBodyType(rapier.RigidBodyType.Dynamic, true);
             body.setTranslation({ x, y, z }, true);
             body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+            applyCrouch(false, world, true);
             grounded.current = false;
             takingOff.current = false;
             playAnimation("Jump_Loop");
-            state.setAttachedRope(null);
+            previousRope.current = null;
+            state.setAttachedRope(state.teleportAttachment);
+            useGameStore.setState({ teleportAttachment: null });
+            state.setLastRopeDetachTime(Date.now());
             state.setTeleport(false);
             state = useGameStore.getState();
         }
 
         if (body.translation().y < -15) {
-            body.setBodyType(rapier.RigidBodyType.Dynamic, true);
-            body.setTranslation({ x: 0, y: 10, z: 0 }, true);
-            body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-            grounded.current = false;
-            takingOff.current = false;
-            playAnimation("Jump_Loop");
-            state.setAttachedRope(null);
-            state.setPlayerDisabled(false);
-            state = useGameStore.getState();
+            state.endRun();
+            return;
         }
 
         const collisionGroups = state.playerDisabled ? 0 : 0xffffffff;
@@ -136,10 +209,14 @@ function PlayerBase() {
         }
 
         const { touchControls, setTouchControls } = useControlsStore.getState();
+        const jumpDown = jump || touchControls.jump;
+        const jumpPressed = jumpDown && !jumpHeld.current;
+        jumpHeld.current = jumpDown;
         const axes = useControllerStore.getState().controllerState?.axes;
         const controllerX = axes && Math.abs(axes[0]) > 0.3 ? axes[0] : 0;
 
         if (rope) {
+            applyCrouch(false, world, true);
             grounded.current = false;
             takingOff.current = false;
             playAnimation("Jump_Loop");
@@ -157,7 +234,7 @@ function PlayerBase() {
                     getClosestRopeDistance(
                         rope.motion,
                         ropeOffset,
-                        clock.elapsedTime,
+                        getSimulationTime(clock),
                     ),
                 );
                 body.setLinvel({ x: 0, y: 0, z: 0 }, true);
@@ -178,7 +255,7 @@ function PlayerBase() {
             );
             const climbVelocity =
                 (ropeHeight.current - previousHeight) / world.timestep;
-            const time = clock.elapsedTime;
+            const time = getSimulationTime(clock);
             getRopePoint(rope.motion, ropeHeight.current, time, ropeOffset);
             const nextPosition = {
                 x: ropeOffset.x,
@@ -187,7 +264,7 @@ function PlayerBase() {
                 z: ropeOffset.z,
             };
 
-            if (jump || touchControls.jump) {
+            if (jumpPressed) {
                 // Sample the same curved path one step ahead so releasing a
                 // rope preserves both its swing momentum and the climb motion.
                 getRopePoint(
@@ -227,21 +304,34 @@ function PlayerBase() {
         if (direction > 0) setLastMove("Right");
         if (direction < 0) setLastMove("Left");
 
-        const nextLocomotion =
-            Math.abs(direction) > 0.05 ? "Walk_Loop" : "Idle_Loop";
+        const wasCrouching = crouched.current;
+        const isCrouching = applyCrouch(
+            moveBackward && grounded.current && !jumpPressed,
+            world,
+        );
+        const nextLocomotion = isCrouching
+            ? Math.abs(direction) > 0.05
+                ? CROUCH_WALK
+                : CROUCH_IDLE
+            : Math.abs(direction) > 0.05
+              ? "Walk_Loop"
+              : "Idle_Loop";
         if (currentLocomotion.current !== nextLocomotion) {
             currentLocomotion.current = nextLocomotion;
             setLocomotionAnimation(nextLocomotion);
         }
+        if (grounded.current && (isCrouching || wasCrouching))
+            playAnimation(nextLocomotion);
 
         const velocity = body.linvel();
-        const shouldJump = (jump || touchControls.jump) && grounded.current;
+        const shouldJump = jumpPressed && grounded.current && !isCrouching;
         if (shouldJump) {
             grounded.current = false;
             takingOff.current = true;
             playAnimation("Jump_Start");
         }
-        const moveVelocity = direction * SPEED * (state.shift ? 2 : 1);
+        const moveVelocity =
+            direction * SPEED * (isCrouching ? 0.45 : state.shift ? 2 : 1);
         const airAdjustment = Math.max(
             -AIR_CONTROL * world.timestep,
             Math.min(AIR_CONTROL * world.timestep, moveVelocity - velocity.x),
@@ -269,12 +359,21 @@ function PlayerBase() {
         const body = rigidBodyRef.current;
         const collider = colliderRef.current;
         const state = useGameStore.getState();
-        if (!body || !collider || state.playerDisabled || state.attachedRope)
+        if (
+            !body ||
+            !collider ||
+            state.runStatus !== "playing" ||
+            state.originX !== mountedOrigin.current ||
+            state.runId !== mountedRun.current
+        )
             return;
+        state.updateDistance(state.originX + body.translation().x);
+        if (state.attachedRope) return;
 
         let touchingGround = false;
+        let landedPlatform = null;
         world.contactPairsWith(collider, (other) => {
-            if (touchingGround || other.isSensor()) return;
+            if (other.isSensor()) return;
 
             // The other collider's outward normal must point up. Side and
             // ceiling contacts cannot ground the player or trigger a landing.
@@ -282,18 +381,50 @@ function PlayerBase() {
                 collider,
                 GROUND_CONTACT_DISTANCE,
             );
-            touchingGround = contact !== null && contact.normal1.y > 0.5;
+            if (contact !== null && contact.normal1.y > 0.5) {
+                touchingGround = true;
+                const data = other.parent()?.userData;
+                if (data?.tag === "finish" || data?.tag === "rest")
+                    landedPlatform = data;
+            }
         });
 
         // A takeoff can retain its previous floor contact for one physics step.
         // Wait for separation or a blocked takeoff to settle before landing.
         if (takingOff.current) {
-            if (!touchingGround || body.linvel().y <= 0) takingOff.current = false;
+            if (!touchingGround || body.linvel().y <= 0)
+                takingOff.current = false;
             touchingGround = false;
         }
 
         const wasGrounded = grounded.current;
         grounded.current = touchingGround;
+        if (touchingGround && body.linvel().y <= 0.1) {
+            if (
+                landedPlatform?.tag === "finish" &&
+                landedPlatform.level === state.runMode
+            ) {
+                state.completeRun();
+                body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+            } else if (
+                landedPlatform?.tag === "rest" &&
+                state.runMode === "endless" &&
+                Math.abs(body.translation().x) >= CHUNK_LENGTH * 8
+            ) {
+                // Recenter only on a safe, stationary platform; retain absolute progress.
+                const position = body.translation();
+                state.updateDistance(state.originX + position.x);
+                const shift =
+                    Math.floor(position.x / CHUNK_LENGTH) * CHUNK_LENGTH;
+                state.rebaseWorld(
+                    shift,
+                    position,
+                    body.linvel(),
+                    crouched.current,
+                );
+                return;
+            }
+        }
         if (touchingGround) {
             if (!wasGrounded) {
                 playAnimation("Jump_Land");
@@ -308,6 +439,12 @@ function PlayerBase() {
     useFrame(() => {
         const body = rigidBodyRef.current;
         if (!body) return;
+        const game = useGameStore.getState();
+        if (
+            game.originX !== mountedOrigin.current ||
+            game.runId !== mountedRun.current
+        )
+            return;
         const { x, y, z } = body.translation();
 
         const newLocation = new Vector3(
@@ -319,8 +456,7 @@ function PlayerBase() {
             useGameStore.getState().setPlayerLocation(newLocation);
             lastLocation.current = newLocation;
         }
-        const state = useStore.getState();
-        if (x > state.maxDistanceTraveled) state.setMaxDistanceTraveled(x);
+        game.updateDistance(game.originX + x);
 
         if (cameraMode !== "Player") return;
         if (cameraControlMethod === "Side Scroll") {
@@ -341,7 +477,8 @@ function PlayerBase() {
     return (
         <RigidBody
             ref={rigidBodyRef}
-            position={[0, 2, 0]}
+            position={spawnPosition}
+            linearVelocity={spawnVelocity}
             colliders={false}
             lockRotations
             ccd
@@ -349,17 +486,39 @@ function PlayerBase() {
         >
             <CapsuleCollider
                 ref={colliderRef}
-                args={[CAPSULE_HALF_HEIGHT, CAPSULE_RADIUS]}
-                position={[0, CAPSULE_HALF_HEIGHT, 0]}
+                args={[
+                    initialCrouch.current
+                        ? CROUCH_HALF_HEIGHT
+                        : CAPSULE_HALF_HEIGHT,
+                    CAPSULE_RADIUS,
+                ]}
+                position={[
+                    0,
+                    crouching ? CROUCH_HALF_HEIGHT : CAPSULE_HALF_HEIGHT,
+                    0,
+                ]}
                 mass={1}
                 friction={0.3}
                 restitution={0}
                 collisionGroups={playerDisabled ? 0 : 0xffffffff}
             />
             {showPhysicsDebug && (
-                <mesh position={[0, CAPSULE_HALF_HEIGHT, 0]}>
+                <mesh
+                    position={[
+                        0,
+                        crouching ? CROUCH_HALF_HEIGHT : CAPSULE_HALF_HEIGHT,
+                        0,
+                    ]}
+                >
                     <capsuleGeometry
-                        args={[CAPSULE_RADIUS, CAPSULE_HALF_HEIGHT * 2, 8, 16]}
+                        args={[
+                            CAPSULE_RADIUS,
+                            (crouching
+                                ? CROUCH_HALF_HEIGHT
+                                : CAPSULE_HALF_HEIGHT) * 2,
+                            8,
+                            16,
+                        ]}
                     />
                     <meshStandardMaterial
                         color="red"
@@ -370,7 +529,14 @@ function PlayerBase() {
             <ModelCharacterUAL
                 castShadow
                 receiveShadow
-                animation={animation}
+                animation={crouching ? undefined : animation}
+                animationIndex={
+                    crouching
+                        ? locomotionAnimation === CROUCH_WALK
+                            ? 1
+                            : 2
+                        : undefined
+                }
                 locomotionAnimation={locomotionAnimation}
                 onAnimationFinished={handleAnimationFinished}
                 animationPaused={playerDisabled}

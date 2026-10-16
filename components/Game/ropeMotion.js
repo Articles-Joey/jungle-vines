@@ -35,17 +35,17 @@ export function updateRopeMotion(rope, time) {
     const phase = time * rope.swingSpeed + rope.swingPhase;
     for (let index = 0; index < ROPE_SEGMENT_COUNT; index += 1) {
         const fraction = (index + 0.5) / ROPE_SEGMENT_COUNT;
-        const flexibility = Math.sin(fraction * Math.PI / 2);
+        const flexibility = Math.sin((fraction * Math.PI) / 2);
         // Motion travels down the rope with a delay. Every section retains its
         // length while the changing angles give the free end a softer follow-through.
-        const angle = (
-            Math.sin(phase - fraction * 1.15) *
+        const angle =
+            (Math.sin(phase - fraction * 1.15) *
                 rope.swingAmplitude *
                 (0.55 + fraction * 0.65) +
-            Math.sin(phase * 1.7 - fraction * 4 + rope.swingPhase) *
-                rope.bendAmplitude *
-                fraction
-        ) * flexibility;
+                Math.sin(phase * 1.7 - fraction * 4 + rope.swingPhase) *
+                    rope.bendAmplitude *
+                    fraction) *
+            flexibility;
         const previous = rope.points[index];
         rope.points[index + 1].set(
             previous.x + Math.sin(angle) * rope.segmentLength,
@@ -63,9 +63,12 @@ export function getLocalRopePoint(rope, distance, time, target) {
         Math.floor(clampedDistance / rope.segmentLength),
     );
     const fraction =
-        (clampedDistance - index * rope.segmentLength) /
-        rope.segmentLength;
-    return target.lerpVectors(rope.points[index], rope.points[index + 1], fraction);
+        (clampedDistance - index * rope.segmentLength) / rope.segmentLength;
+    return target.lerpVectors(
+        rope.points[index],
+        rope.points[index + 1],
+        fraction,
+    );
 }
 
 export function getRopePoint(rope, distance, time, target) {
@@ -76,9 +79,9 @@ export function getRopePoint(rope, distance, time, target) {
 
 export function getClosestRopeDistance(rope, worldPoint, time) {
     updateRopeMotion(rope, time);
-    const point = rope.localGrabPoint.copy(worldPoint).applyMatrix4(
-        rope.inverseMatrixWorld,
-    );
+    const point = rope.localGrabPoint
+        .copy(worldPoint)
+        .applyMatrix4(rope.inverseMatrixWorld);
     let closestDistanceSquared = Infinity;
     let closestDistance = 0;
 

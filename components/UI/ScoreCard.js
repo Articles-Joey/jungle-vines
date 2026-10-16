@@ -3,15 +3,12 @@
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import ReplayIcon from "@mui/icons-material/Replay";
-import { useStore } from "@/hooks/useStore";
-import ArticlesButton from "./Button";
+import { useScoreStore } from "@/hooks/useScoreStore";
+import { MAP_CONFIG } from "../Game/mapLayout";
 
 export default function ScoreCard() {
-    const maxDistanceTraveled = useStore((state) => state.maxDistanceTraveled);
-    const setMaxDistanceTraveled = useStore(
-        (state) => state.setMaxDistanceTraveled,
-    );
+    const best = useScoreStore((state) => state.bestScores.endless);
+    const completed = useScoreStore((state) => state.levelCompletion);
 
     return (
         <Card
@@ -35,18 +32,11 @@ export default function ScoreCard() {
                     borderColor: "divider",
                 }}
             >
-                <Box>High Score</Box>
-                <ArticlesButton
-                    small
-                    aria-label="Reset high score"
-                    onClick={() => setMaxDistanceTraveled(0)}
-                >
-                    <ReplayIcon fontSize="small" />
-                </ArticlesButton>
+                <Box>Saved progress</Box>
             </Box>
             <CardContent sx={{ p: 1, "&:last-child": { pb: 1 } }}>
                 <Box
-                    component="h1"
+                    component="div"
                     sx={{
                         fontFamily: '"Stick", sans-serif',
                         fontWeight: 400,
@@ -57,8 +47,24 @@ export default function ScoreCard() {
                         m: 0,
                     }}
                 >
-                    {maxDistanceTraveled.toFixed(0)}m
+                    {best} m
                 </Box>
+                <Box sx={{ mb: 1 }}>Best Endless distance</Box>
+                {["easy", "medium", "hard"].map((level) => (
+                    <Box
+                        key={level}
+                        sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            gap: 2,
+                        }}
+                    >
+                        <span>{MAP_CONFIG[level].label}</span>
+                        <span>
+                            {completed[level] ? "Completed ✓" : "Not completed"}
+                        </span>
+                    </Box>
+                ))}
             </CardContent>
         </Card>
     );

@@ -11,7 +11,7 @@ import { SkeletonUtils } from "three-stdlib";
 import skinColor from "./skinColor";
 
 // const link = `${process.env.NEXT_PUBLIC_CDN}games/Assets/Quaternius/men/King-transformed.glb`;
-const link = `models/King-transformed.glb`
+const link = `models/King-transformed.glb`;
 
 export function Model(props) {
     const group = React.useRef();

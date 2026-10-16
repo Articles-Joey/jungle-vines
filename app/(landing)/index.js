@@ -14,6 +14,7 @@ import PageTemplateLandingPage from "@articles-media/articles-dev-box/PageTempla
 import { useSocketStore } from "@/hooks/useSocketStore";
 import { useStore } from "@/hooks/useStore";
 import ScoreCard from "@/components/UI/ScoreCard";
+import GameModeSelect from "@/components/UI/GameModeSelect";
 
 const LandingBackgroundAnimation = dynamic(
     () => import("@/components/Game/LandingBackgroundAnimation"),
@@ -22,7 +23,6 @@ const LandingBackgroundAnimation = dynamic(
 
 export default function LobbyPage() {
     const darkMode = useStore((state) => state.darkMode);
-    const maxDistanceTraveled = useStore((state) => state.maxDistanceTraveled);
 
     const pieOptions = [
         {
@@ -171,11 +171,9 @@ export default function LobbyPage() {
                     </Box>
                 }
                 PostHeroContent={
-                    maxDistanceTraveled ? (
-                        <Box sx={{ mb: "1rem" }}>
-                            <ScoreCard />
-                        </Box>
-                    ) : null
+                    <Box sx={{ mb: "1rem" }}>
+                        <ScoreCard />
+                    </Box>
                 }
                 NicknameInputConfig={{
                     PreComponent: (
@@ -191,16 +189,17 @@ export default function LobbyPage() {
                     ),
                 }}
                 backgroundImage="/img/background.webp"
-                singlePlayerConfig={{
-                    attachServerType: "single-player",
-                }}
-                multiplayerConfig={{
-                    type: "WebSocket",
-                    comingSoon: true,
-                    defaultServers: 2,
-                    privateServerSupport: false,
-                    onlinePlayersTemplate: "2.0",
-                }}
+                CardBodyPrependContent={<GameModeSelect />}
+                // singlePlayerConfig={{
+                //     attachServerType: "single-player",
+                // }}
+                // multiplayerConfig={{
+                //     type: "WebSocket",
+                //     comingSoon: true,
+                //     defaultServers: 2,
+                //     privateServerSupport: false,
+                //     onlinePlayersTemplate: "2.0",
+                // }}
             />
         </Box>
     );

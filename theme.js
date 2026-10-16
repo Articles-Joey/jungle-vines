@@ -67,9 +67,9 @@ export function createAppTheme(mode = "dark") {
                         zIndex: 4,
                     },
                     '[data-articles-dev-box-screenshot-mode="enabled"] .stats-overlay':
-                    {
-                        display: "none !important",
-                    },
+                        {
+                            display: "none !important",
+                        },
                 }),
             },
         },

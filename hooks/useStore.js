@@ -26,6 +26,12 @@ export const useStore = create()(
             // setDebugMode: (newValue) => set({ debugMode: newValue }),
 
             seed: "3",
+            gameMode: "easy",
+            setGameMode: (gameMode) => {
+                if (["easy", "medium", "hard", "endless"].includes(gameMode)) {
+                    set({ gameMode });
+                }
+            },
             // TOODO: Uncomment this to use the weekly seed or conditionally set it based on arcadeMode
             // seed: generateWeeklyMapSeed(),
             setSeed: (newValue) => set({ seed: newValue }),

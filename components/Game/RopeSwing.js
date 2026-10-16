@@ -6,12 +6,19 @@ import {
     useBeforePhysicsStep,
     useRapier,
 } from "@react-three/rapier";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import {
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+} from "react";
 import { Quaternion, Vector3 } from "three";
-import { useGameStore } from "@/hooks/useGameStore";
+import { getSimulationTime, useGameStore } from "@/hooks/useGameStore";
 import { useStore } from "@/hooks/useStore";
 import { ModelSpider } from "../Models/Spider";
 import RopeMesh, { OverheadRope } from "./RopeMesh";
+import { seededRandom } from "./mapLayout";
 import {
     createRopeMotion,
     getLocalRopePoint,
@@ -41,7 +48,7 @@ function RopeEnemy({ motion, climbSpeed }) {
     useBeforePhysicsStep(() => {
         const body = rigidBodyRef.current;
         if (!body) return;
-        const time = clock.elapsedTime;
+        const time = getSimulationTime(clock);
         const fraction =
             (Math.sin(time * climbSpeed + motion.swingPhase) + 1) / 2;
         const distance = 1 + fraction * (motion.length - 1);
@@ -74,6 +81,9 @@ export default function RopeSwing({
     swingSpeed: propSwingSpeed,
     swingPhase: propSwingPhase,
     hasEnemy: propHasEnemy,
+    swingAmplitude: propSwingAmplitude,
+    bendAmplitude: propBendAmplitude,
+    variationSeed,
 }) {
     const root = useRef(null);
     const segmentBodies = useRef([]);
@@ -95,24 +105,31 @@ export default function RopeSwing({
     );
 
     const { motion, hasEnemy, climbSpeed } = useMemo(() => {
-        let variation = (Number(seed) || 0) + x * 12.9898 + y * 78.233 + z * 37.719;
-        const random = () => {
-            variation += 1;
-            const value = Math.sin(variation) * 43758.5453;
-            return value - Math.floor(value);
-        };
+        const random = seededRandom(variationSeed ?? `${seed}:${x}:${y}:${z}`);
         return {
             motion: createRopeMotion({
                 length,
                 swingSpeed: propSwingSpeed ?? 1.4 + random() * 0.8,
                 swingPhase: propSwingPhase ?? random() * Math.PI * 2,
-                swingAmplitude: 0.45 + random() * 0.2,
-                bendAmplitude: 0.08 + random() * 0.06,
+                swingAmplitude: propSwingAmplitude ?? 0.45 + random() * 0.2,
+                bendAmplitude: propBendAmplitude ?? 0.08 + random() * 0.06,
             }),
             hasEnemy: propHasEnemy ?? random() > 0.5,
             climbSpeed: 0.2 + random() * 0.8,
         };
-    }, [seed, x, y, z, length, propSwingSpeed, propSwingPhase, propHasEnemy]);
+    }, [
+        seed,
+        x,
+        y,
+        z,
+        length,
+        propSwingSpeed,
+        propSwingPhase,
+        propHasEnemy,
+        propSwingAmplitude,
+        propBendAmplitude,
+        variationSeed,
+    ]);
 
     const initialSegments = useMemo(
         () =>
@@ -120,24 +137,28 @@ export default function RopeSwing({
                 const start = getLocalRopePoint(
                     motion,
                     index * motion.segmentLength,
-                    0,
+                    getSimulationTime(clock),
                     new Vector3(),
                 );
                 const end = getLocalRopePoint(
                     motion,
                     (index + 1) * motion.segmentLength,
-                    0,
+                    getSimulationTime(clock),
                     new Vector3(),
                 );
                 return {
-                    position: start.clone().add(end).multiplyScalar(0.5).toArray(),
+                    position: start
+                        .clone()
+                        .add(end)
+                        .multiplyScalar(0.5)
+                        .toArray(),
                     rotation: new Quaternion().setFromUnitVectors(
                         UP,
                         end.sub(start).normalize(),
                     ),
                 };
             }),
-        [motion],
+        [motion, clock],
     );
 
     const updateTransform = useCallback(() => {
@@ -167,6 +188,7 @@ export default function RopeSwing({
                 other.rigidBodyObject?.userData?.tag !== "player" ||
                 state.attachedRope ||
                 state.playerDisabled ||
+                state.runStatus !== "playing" ||
                 Date.now() - state.lastRopeDetachTime < 200
             )
                 return;
@@ -182,19 +204,29 @@ export default function RopeSwing({
 
     useBeforePhysicsStep(() => {
         updateTransform();
-        const time = clock.elapsedTime;
+        const time = getSimulationTime(clock);
         for (let index = 0; index < ROPE_SEGMENT_COUNT; index += 1) {
             const body = segmentBodies.current[index];
             if (!body) continue;
-            getRopePoint(motion, index * motion.segmentLength, time, scratch.start);
+            getRopePoint(
+                motion,
+                index * motion.segmentLength,
+                time,
+                scratch.start,
+            );
             getRopePoint(
                 motion,
                 (index + 1) * motion.segmentLength,
                 time,
                 scratch.end,
             );
-            scratch.center.copy(scratch.start).add(scratch.end).multiplyScalar(0.5);
-            scratch.direction.subVectors(scratch.end, scratch.start).normalize();
+            scratch.center
+                .copy(scratch.start)
+                .add(scratch.end)
+                .multiplyScalar(0.5);
+            scratch.direction
+                .subVectors(scratch.end, scratch.start)
+                .normalize();
             scratch.rotation.setFromUnitVectors(UP, scratch.direction);
             body.setNextKinematicTranslation(scratch.center);
             body.setNextKinematicRotation(scratch.rotation);
@@ -206,6 +238,13 @@ export default function RopeSwing({
             ref={root}
             position={position}
             rotation={rotation}
+            userData={{
+                teleportRope: {
+                    motion,
+                    length,
+                    getBody: () => segmentBodies.current[0],
+                },
+            }}
         >
             <OverheadRope
                 radius={ropeRadius}

@@ -78,7 +78,8 @@ function createProfile({ depth, height, submergedDepth, seed, offsetX }) {
             const fraction = t - 1;
             const erosion =
                 Math.sin(fraction * Math.PI) *
-                (noise((x + offsetX) * 0.17, 0, bankSeed + 239) - 0.5) * 2.2;
+                (noise((x + offsetX) * 0.17, 0, bankSeed + 239) - 0.5) *
+                2.2;
             target.set(
                 x,
                 top(x, 1) * (1 - fraction) - submergedDepth * fraction,
@@ -96,7 +97,11 @@ function createProfile({ depth, height, submergedDepth, seed, offsetX }) {
             return 0;
         }
         const fraction = t - 3;
-        target.set(x, -submergedDepth * (1 - fraction) + top(x, 0) * fraction, -1);
+        target.set(
+            x,
+            -submergedDepth * (1 - fraction) + top(x, 0) * fraction,
+            -1,
+        );
         return fraction;
     };
 
@@ -196,9 +201,7 @@ function sampleBankTop(data, u, v, target) {
     // Sample the actual triangles so blades stay planted in the deformed mesh.
     const corners = fx + fz <= 1 ? [a, b, a + 1] : [b, a + 1, b + 1];
     const weights =
-        fx + fz <= 1
-            ? [1 - fx - fz, fx, fz]
-            : [1 - fz, 1 - fx, fx + fz - 1];
+        fx + fz <= 1 ? [1 - fx - fz, fx, fz] : [1 - fz, 1 - fx, fx + fz - 1];
     target.set(0, 0, 0);
     for (let index = 0; index < 3; index += 1) {
         target.x += positions.getX(corners[index]) * weights[index];
@@ -208,7 +211,14 @@ function sampleBankTop(data, u, v, target) {
     return target;
 }
 
-function BankSection({ profile, material, start, width, closeStart, closeEnd }) {
+function BankSection({
+    profile,
+    material,
+    start,
+    width,
+    closeStart,
+    closeEnd,
+}) {
     const data = useMemo(
         () => createBankGeometry(profile, start, width, closeStart, closeEnd),
         [profile, start, width, closeStart, closeEnd],
@@ -249,9 +259,10 @@ export default function TerrainBank({
     height = 5,
     submergedDepth = 4,
     seed = 12345,
+    worldOffsetX = position[0],
 }) {
     const darkMode = useStore((state) => state.darkMode);
-    const offsetX = position[0];
+    const offsetX = worldOffsetX;
     const profile = useMemo(
         () => createProfile({ depth, height, submergedDepth, seed, offsetX }),
         [depth, height, submergedDepth, seed, offsetX],
@@ -275,7 +286,10 @@ export default function TerrainBank({
                         profile={profile}
                         material={material}
                         start={index * sectionWidth}
-                        width={Math.min(sectionWidth, width - index * sectionWidth)}
+                        width={Math.min(
+                            sectionWidth,
+                            width - index * sectionWidth,
+                        )}
                         closeStart={index === 0}
                         closeEnd={(index + 1) * sectionWidth >= width}
                     />

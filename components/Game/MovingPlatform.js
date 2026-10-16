@@ -5,6 +5,7 @@ import {
     useBeforePhysicsStep,
 } from "@react-three/rapier";
 import { useRef } from "react";
+import { getSimulationTime } from "@/hooks/useGameStore";
 
 export default function MovingPlatform({
     args = [5, 1, 5],
@@ -19,7 +20,7 @@ export default function MovingPlatform({
     useBeforePhysicsStep(() => {
         rigidBodyRef.current?.setNextKinematicTranslation({
             x: position[0],
-            y: position[1] + Math.sin(clock.elapsedTime * speed) * range,
+            y: position[1] + Math.sin(getSimulationTime(clock) * speed) * range,
             z: position[2],
         });
     });

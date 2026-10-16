@@ -1,13 +1,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
-import {
-    CylinderGeometry,
-    DynamicDrawUsage,
-    Sphere,
-    Vector3,
-} from "three";
+import { CylinderGeometry, DynamicDrawUsage, Sphere, Vector3 } from "three";
 import RopeMaterial from "./RopeMaterial";
 import { getLocalRopePoint } from "./ropeMotion";
+import { getSimulationTime } from "@/hooks/useGameStore";
 
 const STRAND_COUNT = 3;
 const STRAND_GROOVE_DEPTH = 0.14;
@@ -104,7 +100,7 @@ export default function RopeMesh({
     useFrame(({ clock }) => {
         if (!motion) return;
         const { geometry, frames, heightSegments, before, after } = data;
-        const time = clock.elapsedTime;
+        const time = getSimulationTime(clock);
         const tangentStep = motion.segmentLength * 0.25;
         for (let ring = 0; ring <= heightSegments; ring += 1) {
             const distance = (ring / heightSegments) * length;
@@ -114,7 +110,9 @@ export default function RopeMesh({
             getLocalRopePoint(motion, distance + tangentStep, time, after);
             frame.tangent.subVectors(after, before).normalize();
             frame.normal.set(-frame.tangent.y, frame.tangent.x, 0).normalize();
-            frame.binormal.crossVectors(frame.tangent, frame.normal).normalize();
+            frame.binormal
+                .crossVectors(frame.tangent, frame.normal)
+                .normalize();
         }
 
         const vertices = geometry.attributes.position;

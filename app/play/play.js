@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import Box from "@mui/material/Box";
@@ -10,16 +10,35 @@ import GameMenu from "@articles-media/articles-dev-box/GameMenu";
 import LeftPanelContent from "@/components/Game/LeftPanel";
 import { useSocketStore } from "@/hooks/useSocketStore";
 import { useStore } from "@/hooks/useStore";
+import { useGameStore } from "@/hooks/useGameStore";
+import GameHUD from "@/components/UI/GameHUD";
 
 const GameCanvas = dynamic(() => import("@/components/Game/GameCanvas"), {
     ssr: false,
 });
+
+function GameSession({ mode, seed }) {
+    const [ready, setReady] = useState(false);
+    useLayoutEffect(() => {
+        useGameStore.getState().startRun(mode, seed);
+        setReady(true);
+        return () => useGameStore.getState().stopRun();
+    }, [mode, seed]);
+    return ready ? (
+        <>
+            <GameCanvas />
+            <GameHUD />
+        </>
+    ) : null;
+}
 
 export default function GamePage() {
     const socket = useSocketStore((state) => state.socket);
     const connected = useSocketStore((state) => state.connected);
     const server = useSearchParams().get("server");
     const sceneKey = useStore((state) => state.sceneKey);
+    const mode = useStore((state) => state.gameMode) || "easy";
+    const seed = useStore((state) => state.seed);
     const showMenu = useStore((state) => state.showMenu);
     const sidebar = useStore((state) => state.sidebar);
     const nickname = useStore((state) => state.nickname);
@@ -113,7 +132,11 @@ export default function GamePage() {
                     },
                 }}
             >
-                <GameCanvas key={sceneKey} />
+                <GameSession
+                    key={`${sceneKey}:${mode}:${seed}`}
+                    mode={mode}
+                    seed={seed}
+                />
             </Box>
         </Box>
     );

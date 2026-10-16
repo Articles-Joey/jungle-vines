@@ -4,7 +4,12 @@ import { useStore } from "@/hooks/useStore";
 import createPlatformMaterial from "./platformMaterial";
 import PlatformGrass from "./PlatformGrass";
 
-export default function Platform({ args, position, surface = "grass" }) {
+export default function Platform({
+    args,
+    position,
+    surface = "grass",
+    userData,
+}) {
     const darkMode = useStore((state) => state.darkMode);
     const [width, height, depth] = args;
     const material = useMemo(
@@ -18,6 +23,13 @@ export default function Platform({ args, position, surface = "grass" }) {
             type="fixed"
             position={position}
             colliders={false}
+            userData={{
+                ...userData,
+                teleportPlatform: {
+                    width,
+                    top: userData?.teleportTopOffset ?? height / 2,
+                },
+            }}
         >
             <CuboidCollider args={args.map((size) => size / 2)} />
             <mesh

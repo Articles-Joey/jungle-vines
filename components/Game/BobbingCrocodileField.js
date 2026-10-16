@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from "react";
+import React, { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 
 import { ModelCrocodile } from "../Models/Crocodile";
@@ -33,26 +33,7 @@ const BobbingCrocodile = ({ position, speed, offset, scale = 0.01 }) => {
     );
 };
 
-const BobbingCrocodileField = ({
-    count = 10,
-    range = [100, 0, 20],
-    basePosition = [0, -15, 0],
-}) => {
-    const crocodiles = useMemo(() => {
-        return new Array(count).fill(0).map((_, i) => {
-            return {
-                position: [
-                    basePosition[0] + (Math.random() - 0.5) * range[0],
-                    basePosition[1],
-                    basePosition[2] + (Math.random() - 0.5) * range[2],
-                ],
-                speed: 0.5 + Math.random() * 1.5, // Random speed between 0.5 and 2
-                offset: Math.random() * Math.PI * 2, // Random starting phase
-                key: i,
-            };
-        });
-    }, [count, range, basePosition]);
-
+const BobbingCrocodileField = ({ animals: crocodiles = [] }) => {
     return (
         <>
             {crocodiles.map((crocodile) => (
