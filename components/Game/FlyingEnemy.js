@@ -24,6 +24,7 @@ export default function FlyingEnemy({ id = 0, speed = 8, yRange = [-1, 12] }) {
     const overlayAnchor = useRef(null);
     const activeRef = useRef(false);
     const { rapier } = useRapier();
+    const screenshotMode = useStore((state) => state.screenshotMode);
     const showPhysicsDebug = useStore(
         (state) => state.debugConfig?.showPhysicsDebug,
     );
@@ -175,35 +176,37 @@ export default function FlyingEnemy({ id = 0, speed = 8, yRange = [-1, 12] }) {
                     </group>
                 </group>
             </RigidBody>
-            <group ref={overlayAnchor}>
-                <Html
-                    calculatePosition={screenOrigin}
-                    zIndexRange={[30, 30]}
-                    style={{ pointerEvents: "none" }}
-                >
-                    <div
-                        ref={indicatorRef}
-                        aria-label={`Incoming flying enemy ${id + 1}`}
-                        style={{
-                            display: "none",
-                            position: "absolute",
-                            alignItems: "center",
-                            gap: 5,
-                            whiteSpace: "nowrap",
-                            background: "#29190aee",
-                            color: "#ffe28a",
-                            border: "1px solid #ffc55c",
-                            borderRadius: 6,
-                            padding: "5px 8px",
-                            font: "bold 14px sans-serif",
-                            pointerEvents: "none",
-                        }}
+            {!screenshotMode && (
+                <group ref={overlayAnchor}>
+                    <Html
+                        calculatePosition={screenOrigin}
+                        zIndexRange={[30, 30]}
+                        style={{ pointerEvents: "none" }}
                     >
-                        <WarningAmberIcon fontSize="small" />
-                        <span ref={labelRef} />
-                    </div>
-                </Html>
-            </group>
+                        <div
+                            ref={indicatorRef}
+                            aria-label={`Incoming flying enemy ${id + 1}`}
+                            style={{
+                                display: "none",
+                                position: "absolute",
+                                alignItems: "center",
+                                gap: 5,
+                                whiteSpace: "nowrap",
+                                background: "#29190aee",
+                                color: "#ffe28a",
+                                border: "1px solid #ffc55c",
+                                borderRadius: 6,
+                                padding: "5px 8px",
+                                font: "bold 14px sans-serif",
+                                pointerEvents: "none",
+                            }}
+                        >
+                            <WarningAmberIcon fontSize="small" />
+                            <span ref={labelRef} />
+                        </div>
+                    </Html>
+                </group>
+            )}
         </>
     );
 }

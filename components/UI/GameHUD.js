@@ -16,36 +16,39 @@ export default function GameHUD() {
     const restart = useGameStore((state) => state.startRun);
     const best = useScoreStore((state) => state.bestScores.endless);
     const setMode = useStore((state) => state.setGameMode);
+    const screenshotMode = useStore((state) => state.screenshotMode);
     const ended = status === "dead" || status === "completed";
     const config = MAP_CONFIG[mode];
     const next = GAME_MODES[GAME_MODES.indexOf(mode) + 1];
     return (
         <>
-            <Box
-                sx={{
-                    position: "absolute",
-                    top: 12,
-                    right: 12,
-                    zIndex: 40,
-                    p: 1.5,
-                    bgcolor: "#142013dd",
-                    color: "white",
-                    borderRadius: 1,
-                    pointerEvents: "none",
-                }}
-            >
-                <Box sx={{ fontWeight: 700 }}>
-                    {config.label} · {distance} m
-                    {config.chunks
-                        ? ` / ${config.chunks * CHUNK_LENGTH} m`
-                        : ""}
-                </Box>
-                {mode === "endless" && (
-                    <Box sx={{ fontSize: "0.8rem" }}>
-                        Best: {best} m · Seed: {seed}
+            {!screenshotMode && (
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: 12,
+                        right: 12,
+                        zIndex: 40,
+                        p: 1.5,
+                        bgcolor: "#142013dd",
+                        color: "white",
+                        borderRadius: 1,
+                        pointerEvents: "none",
+                    }}
+                >
+                    <Box sx={{ fontWeight: 700 }}>
+                        {config.label} · {distance} m
+                        {config.chunks
+                            ? ` / ${config.chunks * CHUNK_LENGTH} m`
+                            : ""}
                     </Box>
-                )}
-            </Box>
+                    {mode === "endless" && (
+                        <Box sx={{ fontSize: "0.8rem" }}>
+                            Best: {best} m · Seed: {seed}
+                        </Box>
+                    )}
+                </Box>
+            )}
             {ended && (
                 <Box
                     sx={{
